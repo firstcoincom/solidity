@@ -1,0 +1,25 @@
+{
+  "name": "solidity",
+  "version": "1.0.0",
+  "description": "solidity contracts by firstcoin",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/firstcoincom/solidity.git"
+  },
+  "author": "firstcoincom",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/firstcoincom/solidity/issues"
+  },
+  "homepage": "https://github.com/firstcoincom/solidity#readme",
+  "dependencies": {
+    "zeppelin-solidity": "1.5.0"
+  }
+}
