@@ -11,7 +11,9 @@ contract('MeshCrowdsale', (accounts) => {
   const contributionLimit = 100;
   const contributionAmount = contributionLimit / 2;
 
-  const getContracts = () => {
+  const getCurrentTime = () => Math.floor(Date.now() / 1000);
+
+  const getContracts = (startTime = getCurrentTime(), endTime = getCurrentTime() + 1000000) => {
     /**
      * Contract deployment order:
      * 1. Deploy token contract.
@@ -19,8 +21,6 @@ contract('MeshCrowdsale', (accounts) => {
      * 3. Transfer ownership of token contract to crowdsale contract.
      */
     return MeshToken.new(tokenCap).then(meshToken => {
-      const startTime = Math.floor(Date.now() / 1000);
-      const endTime = startTime + 10000000;
       return MeshCrowdsale.new(startTime, endTime, rate, wallet, crowdsaleCap, meshToken.address).then(meshCrowdsale => {
         return meshToken.transferOwnership(meshCrowdsale.address).then(() => {
           return { meshCrowdsale, meshToken, startTime, endTime };
@@ -233,6 +233,109 @@ contract('MeshCrowdsale', (accounts) => {
                   assert.equal(results[1], rate * 2 * contributionAmount, "No. of tokens should be equal to rate * 2 * contributionAmount");
                 });
               });
+            });
+          });
+        });
+      });
+    });
+  });
+
+  describe('startTime and endTime', () => {
+    it('should not allow contribution before start time', () => {
+      const startTime = getCurrentTime() + 100000;
+      const endTime = startTime + 10000;
+      const contributionDelay = 0;
+      return getContracts(startTime, endTime).then(({ meshCrowdsale, meshToken }) => {
+        return meshCrowdsale.setLimit(addr1, contributionLimit).then(() => {
+          return new Promise(resolve => {
+            setTimeout(() => {
+              meshCrowdsale.sendTransaction({value: contributionAmount, from: addr1})
+              .then(() => {
+                meshToken.balanceOf(addr1).then(balance => {
+                  assert.equal(0, balance, "Token balance should be 0");
+                  resolve('');
+                });
+              })
+            }, contributionDelay * 1000);
+          });
+        });
+      });
+    });
+
+    it('should not allow contribution after end time', () => {
+      const startTime = getCurrentTime();
+      const endTime = startTime + 1;
+      const contributionDelay = 2;
+      return getContracts(startTime, endTime).then(({ meshCrowdsale, meshToken }) => {
+        return meshCrowdsale.setLimit(addr1, contributionLimit).then(() => {
+          return new Promise(resolve => {
+            setTimeout(() => {
+              meshCrowdsale.sendTransaction({value: contributionAmount, from: addr1})
+              .then(() => {
+                meshToken.balanceOf(addr1).then(balance => {
+                  assert.equal(0, balance, "Token balance should be 0");
+                  resolve('');
+                });
+              })
+            }, contributionDelay * 1000);
+          });
+        });
+      });
+    });
+
+    it('should not allow contribution after start time and before end time', () => {
+      const startTime = getCurrentTime();
+      const endTime = startTime + 2;
+      const contributionDelay = 1;
+      return getContracts(startTime, endTime).then(({ meshCrowdsale, meshToken }) => {
+        return meshCrowdsale.setLimit(addr1, contributionLimit).then(() => {
+          return new Promise(resolve => {
+            setTimeout(() => {
+              meshCrowdsale.sendTransaction({value: contributionAmount, from: addr1})
+              .then(() => {
+                meshToken.balanceOf(addr1).then(balance => {
+                  assert.equal(contributionAmount * rate, balance, "Token balance should be contributionAmount * rate");
+                  resolve('');
+                });
+              })
+            }, contributionDelay * 1000);
+          });
+        });
+      });
+    });
+  });
+
+  describe('total contribution cap', () => {
+    it('should not allow to contribute more than crowdsale cap', () => {
+      return getContracts().then(({ meshCrowdsale, meshToken }) => {
+        return meshCrowdsale.setLimit(addr1, crowdsaleCap + 100).then(() => {
+          return meshCrowdsale.sendTransaction({ value: crowdsaleCap + 100, from: addr1}).then(() => {
+            return meshToken.balanceOf(addr1).then(balance => {
+              assert.equal(0, balance, "Token balance should be 0");
+            });
+          });
+        });
+      });
+    });
+
+    it('should allow to contribute less than crowdsale cap', () => {
+      return getContracts().then(({ meshCrowdsale, meshToken }) => {
+        return meshCrowdsale.setLimit(addr1, crowdsaleCap).then(() => {
+          return meshCrowdsale.sendTransaction({ value: crowdsaleCap - 1, from: addr1}).then(() => {
+            return meshToken.balanceOf(addr1).then(balance => {
+              assert.equal(rate * (crowdsaleCap - 1), balance, "Token balance should be rate * (crowdsaleCap - 1)");
+            });
+          });
+        });
+      });
+    });
+
+    it('should allow to contribute equal to crowdsale cap', () => {
+      return getContracts().then(({ meshCrowdsale, meshToken }) => {
+        return meshCrowdsale.setLimit(addr1, crowdsaleCap).then(() => {
+          return meshCrowdsale.sendTransaction({ value: crowdsaleCap, from: addr1}).then(() => {
+            return meshToken.balanceOf(addr1).then(balance => {
+              assert.equal(rate * crowdsaleCap, balance, "Token balance should be rate * crowdsaleCap");
             });
           });
         });
