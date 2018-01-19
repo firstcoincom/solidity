@@ -1,0 +1,48 @@
+## RightMesh Crowdsale Contracts
+
+### Setup Requirememts
+1. npm 5.4.x or higher
+2. node 8.7.x or higher
+
+
+### Dev Setup
+1. Clone this repository
+```
+git clone https://github.com/firstcoincom/solidity.git
+```
+2. Navigate to `rightmesh` directory
+```
+cd rightmesh
+```
+3. Install dependencies
+```
+npm install
+```
+
+
+### Running tests
+1. In your first terminal window run the following command to start a test rpc server.
+```
+npm run ganache
+```
+2. In your second terminal window run the following command to run the tests.
+```
+npm test
+```
+
+### Compiling contracts
+1. Run the following command in your terminal to compile the contracts.
+```
+npm run compile
+```
+2. In your build directory you will have the following files:
+  - `build/MeshToken.sol` - complete token contract that can be deployed.
+  - `build/MeshCrowdsale.sol` - complete crowdsale contract that can be deployed.
+  - `build/contracts/MeshToken.json` - truffle build that can be deployed using truffle migrations
+  - `build/contracts/MeshCrowdsale.json` - truffle build that can be deployed using truffle migrations
+
+### Deploying using truffle
+1. Run the following command to deploy to local rpc network using truffle
+```
+npm run migrate
+```
