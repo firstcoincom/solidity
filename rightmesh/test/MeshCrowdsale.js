@@ -241,7 +241,13 @@ contract('MeshCrowdsale', (accounts) => {
   });
 
   describe('startTime and endTime', () => {
-    it('should not allow contribution before start time', () => {
+    it('ERROR: should not allow contribution before start time', () => {
+      /**
+       * Scenario:
+       * 1. Sale starts 1000000 seconds after deply.
+       * 2. User trying to contribute before sale starts.
+       * 3. User should not be able to contribute.
+       */
       const startTime = getCurrentTime() + 100000;
       const endTime = startTime + 10000;
       const contributionDelay = 0;
@@ -262,7 +268,13 @@ contract('MeshCrowdsale', (accounts) => {
       });
     });
 
-    it('should not allow contribution after end time', () => {
+    it('ERROR: should not allow contribution after end time', () => {
+      /**
+       * Scenario:
+       * 1. Sale starts immediately and ends afer 1 second.
+       * 2. User trying to contribute after sale ends.
+       * 3. User should not be able to contribute.
+       */
       const startTime = getCurrentTime();
       const endTime = startTime + 1;
       const contributionDelay = 2;
@@ -283,7 +295,13 @@ contract('MeshCrowdsale', (accounts) => {
       });
     });
 
-    it('should not allow contribution after start time and before end time', () => {
+    it('SUCCESS: should not allow contribution after start time and before end time', () => {
+      /**
+       * Scenario:
+       * 1. Sale starts immediately and ends afer 2 seconds
+       * 2. User trying to contribute within the 2 seconds.
+       * 3. User should be able to contribute.
+       */
       const startTime = getCurrentTime();
       const endTime = startTime + 2;
       const contributionDelay = 1;
@@ -306,7 +324,13 @@ contract('MeshCrowdsale', (accounts) => {
   });
 
   describe('total contribution cap', () => {
-    it('should not allow to contribute more than crowdsale cap', () => {
+    it('ERROR: should not allow to contribute more than crowdsale cap', () => {
+      /**
+       * Scenario:
+       * 1. Change user contribution limit more than the crowdsale cap.
+       * 2. User tries to contribuite more than the crowdsale cap.
+       * 3. User should not be able to contribute.
+       */
       return getContracts().then(({ meshCrowdsale, meshToken }) => {
         return meshCrowdsale.setLimit(addr1, crowdsaleCap + 100).then(() => {
           return meshCrowdsale.sendTransaction({ value: crowdsaleCap + 100, from: addr1}).then(() => {
@@ -318,7 +342,13 @@ contract('MeshCrowdsale', (accounts) => {
       });
     });
 
-    it('should allow to contribute less than crowdsale cap', () => {
+    it('SUCCESS: should allow to contribute less than crowdsale cap', () => {
+      /**
+       * Scenario:
+       * 1. Change user contribution limit less than the crowdsale cap.
+       * 2. User tries to contribuite less than the crowdsale cap.
+       * 3. User should be able to contribute.
+       */
       return getContracts().then(({ meshCrowdsale, meshToken }) => {
         return meshCrowdsale.setLimit(addr1, crowdsaleCap).then(() => {
           return meshCrowdsale.sendTransaction({ value: crowdsaleCap - 1, from: addr1}).then(() => {
@@ -330,7 +360,13 @@ contract('MeshCrowdsale', (accounts) => {
       });
     });
 
-    it('should allow to contribute equal to crowdsale cap', () => {
+    it('SUCCESS: should allow to contribute equal to crowdsale cap', () => {
+      /**
+       * Scenario:
+       * 1. Change user contribution limit equal to the crowdsale cap.
+       * 2. User tries to contribuite equal to the crowdsale cap.
+       * 3. User should be able to contribute.
+       */
       return getContracts().then(({ meshCrowdsale, meshToken }) => {
         return meshCrowdsale.setLimit(addr1, crowdsaleCap).then(() => {
           return meshCrowdsale.sendTransaction({ value: crowdsaleCap, from: addr1}).then(() => {

@@ -56,3 +56,4 @@ npm run migrate
 5. Once crowdsale is done, call `transferTokenOwnership` within crowdsale to take back token ownership from crowdsale contract to original owner.
 6. Mint tokens for ECA's and pre-contributions.
 7. Call `Unpause` to enable token transfers.
+8. Go through the `tests` directory to see all the different scenarios covered.
