@@ -8,7 +8,7 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "ganache": "ganache-cli -g 1000000000000 --account='0x535684b2b58d86fec27fcec2b7495a3590c464642e2be1a729df2a2b7c4b1849,10000000000000000000000' --unlock 0  --account='0xe944e6665bf6ac93f5e2fa7a93eea6c7af8c3e84c9ba3f2ec79ed36c895d752a,10000000000000000000000' --unlock 1"
+    "ganache": "ganache-cli -g 100 -l 90000000 --account='0x535684b2b58d86fec27fcec2b7495a3590c464642e2be1a729df2a2b7c4b1849,10000000000000000000000' --unlock 0  --account='0xe944e6665bf6ac93f5e2fa7a93eea6c7af8c3e84c9ba3f2ec79ed36c895d752a,10000000000000000000000' --unlock 1"
   },
   "repository": {
     "type": "git",
