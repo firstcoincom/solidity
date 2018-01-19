@@ -7,7 +7,8 @@
     "test": "test"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "testrpc": "testrpc -g 1000000000000"
   },
   "repository": {
     "type": "git",
@@ -20,6 +21,8 @@
   },
   "homepage": "https://github.com/firstcoincom/solidity#readme",
   "dependencies": {
+    "ethereumjs-testrpc": "6.0.3",
+    "truffle-flattener": "1.2.0",
     "zeppelin-solidity": "1.5.0"
   }
 }
