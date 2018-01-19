@@ -70,7 +70,7 @@ contract('MeshCrowdsale', (accounts) => {
     });
   });
 
-  describe('updateLimit',  () => {
+  describe('setLimit',  () => {
     it('should update limit correctly', () => {
       /**
        * Scenario:
@@ -78,7 +78,7 @@ contract('MeshCrowdsale', (accounts) => {
        * 2. Anyone being able to read weiLimits for an address.
        */
       return getContracts().then(({ meshCrowdsale, meshToken }) => {
-        return meshCrowdsale.updateLimit(addr1, contributionLimit).then(() => {
+        return meshCrowdsale.setLimit(addr1, contributionLimit).then(() => {
           return meshCrowdsale.weiLimits(addr1).then(limit => {
             assert.equal(limit, contributionLimit, "Contribution limit should be set to contribution limit now");
           });

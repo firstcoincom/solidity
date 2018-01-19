@@ -73,7 +73,7 @@ contract MeshCrowdsale is CappedCrowdsale, Ownable {
    * @param _weiLimit new contribution limit
    * @return boolean indicating function success.
    */
-  function updateLimit(address _address, uint256 _weiLimit) public onlyOwner returns (bool) {
+  function setLimit(address _address, uint256 _weiLimit) public onlyOwner returns (bool) {
     // only allow changing the limit to be greater than current contribution
     require(_weiLimit >= weiContributions[_address]);
     weiLimits[_address] = _weiLimit;
