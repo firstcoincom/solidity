@@ -7,8 +7,10 @@
     "test": "test"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "ganache": "ganache-cli -g 1 -l 900000000 --account='0x535684b2b58d86fec27fcec2b7495a3590c464642e2be1a729df2a2b7c123456,10000000000000000000000' --unlock 0  --account='0xe944e6665bf6ac93f5e2fa7a93eea6c7af8c3e84c9ba3f2ec79ed36c89123456,10000000000000000000000' --unlock 1"
+    "test": "truffle test",
+    "ganache": "ganache-cli -g 1 -l 900000000 --account='0x535684b2b58d86fec27fcec2b7495a3590c464642e2be1a729df2a2b7c123456,10000000000000000000000' --unlock 0  --account='0xe944e6665bf6ac93f5e2fa7a93eea6c7af8c3e84c9ba3f2ec79ed36c89123456,10000000000000000000000' --unlock 1",
+    "compile": "./compile.sh",
+    "migrate": "truffle migrate"
   },
   "repository": {
     "type": "git",
@@ -23,6 +25,7 @@
   "dependencies": {
     "ethereumjs-testrpc": "6.0.3",
     "ganache-cli": "^7.0.0-beta.0",
+    "truffle": "4.0.5",
     "truffle-flattener": "1.2.0",
     "zeppelin-solidity": "1.5.0"
   }
