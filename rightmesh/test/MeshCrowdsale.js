@@ -97,7 +97,7 @@ contract('MeshCrowdsale', (accounts) => {
   });
 
   describe('transferTokenOwnership', () => {
-    it('should transfer the ownership correctly', () => {
+    it('should transfer the ownership correctly from owner', () => {
       /**
        * Scenario:
        * 1. Transfer token ownership to crowdsale for minting buyTokens.
@@ -112,6 +112,26 @@ contract('MeshCrowdsale', (accounts) => {
         });
       });
     });
+
+    it('should not allow transfer the ownership correctly from non-owner', () => {
+      /**
+       * Scenario:
+       * 1. Transfer token ownership to crowdsale for minting buyTokens.
+       * 2. Non-owner tries to change the ownership of token
+       * 3. Token ownership transfer should fail.
+       */
+      return getContracts().then(({ meshCrowdsale, meshToken }) => {
+        return meshCrowdsale.transferTokenOwnership(addr1, { from: accounts[1] }).then(() => {
+          throw 'should not reach here';
+        }).catch(() => {
+          return meshToken.owner().then(owner => {
+            assert.equal(owner, meshCrowdsale.address, "Token should still be owned by contract only");
+          });
+        });
+      });
+    });
+
+
   });
 
   describe('user scenarios for contribution', () => {
