@@ -5,7 +5,6 @@ contract('MeshCrowdsale', (accounts) => {
   const rate = 100;
   const wallet = accounts[0];
   const crowdsaleCap = 10000;
-  const tokenCap = 100000000;
 
   const addr1 = accounts[1];
   const contributionLimit = 100;
@@ -16,16 +15,13 @@ contract('MeshCrowdsale', (accounts) => {
   const getContracts = (startTime = getCurrentTime(), endTime = getCurrentTime() + 1000000) => {
     /**
      * Contract deployment order:
-     * 1. Deploy token contract.
-     * 2. Deploy crowdsale contract with all the required params + token contract address.
-     * 3. Transfer ownership of token contract to crowdsale contract.
+     * 1. Deploy crowdsale contract with all the required params
      */
-    return MeshToken.new(tokenCap).then(meshToken => {
-      return MeshCrowdsale.new(startTime, endTime, rate, wallet, crowdsaleCap, meshToken.address).then(meshCrowdsale => {
-        return meshToken.transferOwnership(meshCrowdsale.address).then(() => {
-          return { meshCrowdsale, meshToken, startTime, endTime };
-        });
-      });
+    return MeshCrowdsale.new(startTime, endTime, rate, wallet, crowdsaleCap).then(meshCrowdsale => {
+      return meshCrowdsale.token().then(meshTokenAddress => {
+        const meshToken = MeshToken.at(meshTokenAddress);
+        return { meshCrowdsale, meshToken, startTime, endTime };
+      });s
     });
   }
 
@@ -100,14 +96,16 @@ contract('MeshCrowdsale', (accounts) => {
     it('should transfer the ownership correctly from owner', () => {
       /**
        * Scenario:
-       * 1. Transfer token ownership to crowdsale for minting buyTokens.
-       * 2. Once crowdsale is done, transfer the ownership back to an address for manual minting.
-       * 3. Token should now be onwed by the new owner.
+       * 1. Once crowdsale is done, transfer the ownership back to contract owner address.
+       * 2. Token should now be onwed by the contract owner.
        */
       return getContracts().then(({ meshCrowdsale, meshToken }) => {
-        return meshCrowdsale.transferTokenOwnership(addr1).then(() => {
-          return meshToken.owner().then(owner => {
-            assert.equal(owner, addr1, "Token owner should be updated to addr1 now");
+        return meshCrowdsale.transferTokenOwnership().then(() => {
+          return Promise.all([
+            meshToken.owner(),
+            meshCrowdsale.owner(),
+          ]).then(results => {
+            assert.equal(results[0], results[1], "Token owner should be updated to contract owner now");
           });
         });
       });
@@ -116,9 +114,8 @@ contract('MeshCrowdsale', (accounts) => {
     it('should not allow transfer the ownership correctly from non-owner', () => {
       /**
        * Scenario:
-       * 1. Transfer token ownership to crowdsale for minting buyTokens.
-       * 2. Non-owner tries to change the ownership of token
-       * 3. Token ownership transfer should fail.
+       * 1. Non-owner tries to change the ownership of token
+       * 2. Token ownership transfer should fail.
        */
       return getContracts().then(({ meshCrowdsale, meshToken }) => {
         return meshCrowdsale.transferTokenOwnership(addr1, { from: accounts[1] }).then(() => {
@@ -130,8 +127,74 @@ contract('MeshCrowdsale', (accounts) => {
         });
       });
     });
+  });
 
+  describe('pauseToken', () => {
+    /**
+     * Scenario:
+     * 1. Contract owner call pauseToken to pause token transfers
+     * 2. Token transfers should be paused now.
+     */
+    it('should pause token when requested by owner', () => {
+      return getContracts().then(({ meshCrowdsale, meshToken }) => {
+        return meshCrowdsale.pauseToken().then(() => {
+          return meshToken.paused().then(paused => {
+            assert.equal(paused, true, "Token should be paused now");
+          });
+        });
+      });
+    });
 
+    /**
+     * Scenario:
+     * 1. Non owner call pauseToken to pause token transfers
+     * 2. Token transfers should still be unpaused.
+     */
+   it('should not pause token when requested by non-owner', () => {
+      return getContracts().then(({ meshCrowdsale, meshToken }) => {
+        return meshCrowdsale.pauseToken({ from: accounts[1] }).then(() => {
+          return meshToken.paused().then(paused => {
+            assert.equal(paused, false, "Token should be paused now");
+          });
+        });
+      });
+    });
+  });
+
+  describe('unpauseToken', () => {
+    /**
+     * Scenario:
+     * 1. Contract owner call unpauseToken to pause token transfers
+     * 2. Token transfers should be unpaused now.
+     */
+   it('should unpause token when requested by owner', () => {
+      return getContracts().then(({ meshCrowdsale, meshToken }) => {
+        return meshCrowdsale.pauseToken().then(() => {
+          return meshCrowdsale.unpauseToken().then(() => {
+            return meshToken.paused().then(paused => {
+              assert.equal(paused, false, "Token should be unpaused now");
+            });
+          });
+        });
+      });
+    });
+
+    /**
+     * Scenario:
+     * 1. Non owner call unpauseToken to pause token transfers
+     * 2. Token transfers should still be paused.
+     */
+   it('should not unpause token when requested by non-owner', () => {
+      return getContracts().then(({ meshCrowdsale, meshToken }) => {
+        return meshCrowdsale.pauseToken().then(() => {
+          return meshCrowdsale.pauseToken({ from: accounts[1] }).then(() => {
+            return meshToken.paused().then(paused => {
+              assert.equal(paused, true, "Token should still be paused now");
+            });
+          });
+        });
+      });
+    });
   });
 
   describe('user scenarios for contribution', () => {
