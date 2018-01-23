@@ -1,7 +1,7 @@
 pragma solidity ^0.4.17;
 
-import 'zeppelin-solidity/contracts/token/CappedToken.sol';
-import 'zeppelin-solidity/contracts/token/PausableToken.sol';
+import 'zeppelin-solidity/contracts/token/ERC20/CappedToken.sol';
+import 'zeppelin-solidity/contracts/token/ERC20/PausableToken.sol';
 
 contract MeshToken is CappedToken, PausableToken {
   string public name = "MESH TOKEN";

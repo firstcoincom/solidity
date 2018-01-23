@@ -55,7 +55,7 @@ contract MeshCrowdsale is CappedCrowdsale, Ownable {
    */
   function validPurchase() internal view returns (bool) {
     bool withinLimit = weiContributions[msg.sender] <= weiLimits[msg.sender];
-    return super.validPurchase() && withinLimit;
+    return withinLimit && super.validPurchase();
   }
 
 
