@@ -49,11 +49,9 @@ npm run migrate
 ```
 
 ### Overall crowdsale flow
-1. Deploy token contract with max cap set.
-2. Call `Pause` method on token to pause transfers.
-3. Deploy crowdsale contract with start time, end time, wei to token rate, wallet address, token address, crowdsale cap and token address that you just deployed.
-4. Change token owner to crowdsale, in order to allow minting during the crowdsale process.
-5. Once crowdsale is done, call `transferTokenOwnership` within crowdsale to take back token ownership from crowdsale contract to original owner.
-6. Mint tokens for ECA's and pre-contributions.
-7. Call `Unpause` to enable token transfers.
-8. Go through the `tests` directory to see all the different scenarios covered.
+1. Deploy crowdsale contract with start time, end time, wei to token rate, wallet address and crowdsale cap.
+2. Call `pauseToken` method on token to pause transfers.
+3. Once crowdsale is done, call `transferTokenOwnership` within crowdsale to take back token ownership from crowdsale contract to original owner.
+4. Mint tokens for ECA's and pre-contributions.
+5. Call `Unpause` to enable token transfers.
+6. Go through the `tests` directory to see all the different scenarios covered.

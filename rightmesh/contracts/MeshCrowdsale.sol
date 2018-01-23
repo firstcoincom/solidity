@@ -25,24 +25,19 @@ contract MeshCrowdsale is CappedCrowdsale, Ownable {
   /**
    * @dev Constructor for MeshCrowdsale contract
    */
-  function MeshCrowdsale(uint256 _startTime, uint256 _endTime, uint256 _rate, address _wallet, uint256 _cap, address _tokenAddress)
+  function MeshCrowdsale(uint256 _startTime, uint256 _endTime, uint256 _rate, address _wallet, uint256 _cap)
   CappedCrowdsale(_cap)
   Crowdsale(_startTime, _endTime, _rate, _wallet)
   public
-  {
-    token = MeshToken(_tokenAddress);
-  }
+  {}
 
   /*---------------------------------overridden methods---------------------------------*/
 
-  // dummy function to create a token instance
-  // overridden method to point to already deployed token
   /**
-   * overriding Crowdsale#createTokenContract to point to a 0 address
-   * actual token address mapping happens in the Constructor.
+   * overriding Crowdsale#createTokenContract to deploy new mesh token
    */
   function createTokenContract() internal returns (MintableToken) {
-    return MeshToken(address(0));
+    return new MeshToken();
   }
 
 
@@ -81,11 +76,23 @@ contract MeshCrowdsale is CappedCrowdsale, Ownable {
   }
 
   /**
-   * @dev Allows the current owner to transfer control of the contract to a newOwner.
-   * @param newOwner The address to transfer ownership to.
+   * @dev Allows the current owner to transfer token control back to contract owner
    */
-  function transferTokenOwnership(address newOwner) public onlyOwner {
-    require(newOwner != address(0));
-    token.transferOwnership(newOwner);
+  function transferTokenOwnership() public onlyOwner {
+    token.transferOwnership(owner);
+  }
+
+  /**
+   * @dev Allows the contract owner to pause the token transfers on deployed token
+   */
+  function pauseToken() public onlyOwner {
+    MeshToken(token).pause();
+  }
+
+  /**
+   * @dev Allows the contract owner to unpause the token transfers on deployed token
+   */
+  function unpauseToken() public onlyOwner {
+    MeshToken(token).unpause();
   }
 }
