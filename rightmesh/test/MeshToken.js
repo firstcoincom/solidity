@@ -67,10 +67,8 @@ contract('MeshToken', (accounts) => {
    it('should not allow setting allowedTransfers by non-owner', () => {
       return MeshToken.new().then(meshToken => {
         return meshToken.allowedTransfers(accounts[0]).then(originalAllowedTransfers => {
-            assert.equal(originalAllowedTransfers, false, "should be false by default.");
+          assert.equal(originalAllowedTransfers, false, "should be false by default.");
           return meshToken.updateAllowedTransfers(accounts[0], true, { from: accounts[1]}).then(() => {
-            throw 'should not reach here';
-          }).catch(() => {
             return meshToken.allowedTransfers(accounts[0]).then(allowedTransfers => {
               assert.equal(allowedTransfers, originalAllowedTransfers, "should still be set to what it was before.");
             });
@@ -135,8 +133,6 @@ contract('MeshToken', (accounts) => {
     it('should not allow non-owner to pause the token', () => {
       return MeshToken.new().then(meshToken => {
         return meshToken.pause({ from: accounts[1] }).then(() => {
-          throw 'should not reach here';
-        }).catch(() => {
           return meshToken.paused().then(paused => {
             assert.equal(paused, false, "should not be paused");
           });
@@ -154,8 +150,6 @@ contract('MeshToken', (accounts) => {
       return MeshToken.new().then(meshToken => {
         return meshToken.pause().then(() => {
           return meshToken.unpause({ from: accounts[1]}).then(() => {
-            throw 'should not reach here';
-          }).catch(() => {
             return meshToken.paused().then(paused => {
               assert.equal(paused, true, "should not be unpaused");
             });
@@ -174,8 +168,6 @@ contract('MeshToken', (accounts) => {
       return MeshToken.new().then(meshToken => {
         return meshToken.pause().then(() => {
           return meshToken.pause().then(() => {
-            throw 'should not reach here';
-          }).catch(() => {
             return meshToken.paused().then(paused => {
               assert.equal(paused, true, "should be paused by now");
             });
@@ -192,8 +184,6 @@ contract('MeshToken', (accounts) => {
     it('should only allow owner to unpause when paused', () => {
       return MeshToken.new().then(meshToken => {
         return meshToken.unpause().then(() => {
-          throw 'should not reach here';
-        }).catch(() => {
           return meshToken.paused().then(paused => {
             assert.equal(paused, false, "should be unpaused already");
           });
