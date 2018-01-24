@@ -191,4 +191,142 @@ contract('MeshToken', (accounts) => {
       });
     });
   });
+
+  describe('transfer', () => {
+
+    /**
+     * Scenario:
+     * 1. Token contract is deployed successfully.
+     * 2. Owner mints the token
+     * 3. Transfer token from one account to another should work.
+     */
+    it('should allow transfers by default', () => {
+      return MeshToken.new().then(meshToken => {
+        return meshToken.mint(accounts[0], 1000).then(() => {
+          return meshToken.transfer(accounts[1], 1000).then(() => {
+            return Promise.all([
+              meshToken.balanceOf(accounts[0]),
+              meshToken.balanceOf(accounts[1])
+            ]).then(results => {
+              assert.equal(results[0], 0, 'sender account should have a balance of 0 now');
+              assert.equal(results[1], 1000, 'receiver account should have a balance of 1000 now');
+            });
+          });
+        });
+      });
+    });
+
+    /**
+     * Scenario:
+     * 1. Token contract is deployed successfully.
+     * 2. Owner mints the tokens.
+     * 3. Owner paused token transfers.
+     * 4. Transfer tokens from one account to another should not work.
+     */
+    it('should not allow transfers when paused', () => {
+      return MeshToken.new().then(meshToken => {
+        return meshToken.mint(accounts[0], 1000).then(() => {
+          return meshToken.pause().then(() => {
+            return meshToken.transfer(accounts[1], 1000).then(() => {
+              return Promise.all([
+                meshToken.balanceOf(accounts[0]),
+                meshToken.balanceOf(accounts[1])
+              ]).then(results => {
+                assert.equal(results[0], 1000, 'sender account should still have its original balance');
+                assert.equal(results[1], 0, 'receiver account should still be at 0');
+              });
+            });
+          });
+        });
+      });
+    });
+
+    /**
+     * Scenario:
+     * 1. Token contract is deployed successfully.
+     * 2. Owner mints the tokens.
+     * 3. Owner paused token transfers.
+     * 4. Owner unpaused token transfers.
+     * 5. Transfer tokens from one account to another should not work.
+     */
+    it('should allow transfers when not paused (same as default)', () => {
+      return MeshToken.new().then(meshToken => {
+        return meshToken.mint(accounts[0], 1000).then(() => {
+          return meshToken.pause().then(() => {
+            return meshToken.unpause().then(() => {
+              return meshToken.transfer(accounts[1], 1000).then(() => {
+                return Promise.all([
+                  meshToken.balanceOf(accounts[0]),
+                  meshToken.balanceOf(accounts[1])
+                ]).then(results => {
+                  assert.equal(results[0], 0, 'sender account should have a balance of 0 now');
+                  assert.equal(results[1], 1000, 'receiver account should have a balance of 1000 now');
+                });
+              });
+            });
+          });
+        });
+      });
+    });
+  });
+
+  describe('mint', () => {
+    /**
+     * Scenario:
+     * 1. Token contract is deployed successfully.
+     * 2. Owner mints the tokens.
+     * 3. Minting should succeed by default.
+     */
+    it('should allow minting by default', () => {
+      return MeshToken.new().then(meshToken => {
+        return meshToken.mint(accounts[0], 1000).then(() => {
+          return meshToken.balanceOf(accounts[0]).then(balance => {
+            assert.equal(balance, 1000, 'should have the balance of 1000 tokens by now');
+          });
+        });
+      });
+    });
+
+    /**
+     * Scenario:
+     * 1. Token contract is deployed successfully.
+     * 2. Owner paused the tokens.
+     * 3. Owner mints the tokens.
+     * 4. Minting should still work.
+     */
+    it('should allow minting when paused', () => {
+      return MeshToken.new().then(meshToken => {
+        return meshToken.pause().then(() => {
+          return meshToken.mint(accounts[0], 1000).then(() => {
+            return meshToken.balanceOf(accounts[0]).then(balance => {
+              assert.equal(balance, 1000, 'should have the balance of 1000 tokens by now');
+            });
+          });
+        });
+      });
+    });
+
+    /**
+     * Scenario:
+     * 1. Token contract is deployed successfully.
+     * 2. Owner paused the tokens.
+     * 3. Owner unpaused the tokens.
+     * 4. Owner mints the tokens.
+     * 5. Minting should still work.
+     */
+    it('should allow minting when unpaused', () => {
+      return MeshToken.new().then(meshToken => {
+        return meshToken.pause().then(() => {
+          return meshToken.unpause().then(() => {
+            return meshToken.mint(accounts[0], 1000).then(() => {
+              return meshToken.balanceOf(accounts[0]).then(balance => {
+                assert.equal(balance, 1000, 'should have the balance of 1000 tokens by now');
+              });
+            });
+          });
+        });
+      });
+    });
+
+  });
 });
