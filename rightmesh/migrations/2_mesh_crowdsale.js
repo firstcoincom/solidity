@@ -8,5 +8,7 @@ const startTime = Math.floor(Date.now() / 1000);
 const endTime = startTime + 1000000;
 
 module.exports = deployer => {
-  return deployer.deploy(MeshCrowdsale, startTime, endTime, wieToTokenRate, wallet, crowdsaleCap);
+  return deployer.deploy(MeshToken).then(() => {
+    return deployer.deploy(MeshCrowdsale, startTime, endTime, wieToTokenRate, wallet, crowdsaleCap, MeshToken.address);
+  });
 };
