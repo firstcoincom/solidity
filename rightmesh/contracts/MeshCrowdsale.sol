@@ -25,21 +25,13 @@ contract MeshCrowdsale is CappedCrowdsale, Ownable {
   /**
    * @dev Constructor for MeshCrowdsale contract
    */
-  function MeshCrowdsale(uint256 _startTime, uint256 _endTime, uint256 _rate, address _wallet, uint256 _cap)
+  function MeshCrowdsale(uint256 _startTime, uint256 _endTime, uint256 _rate, address _wallet, uint256 _cap, MeshToken _token)
   CappedCrowdsale(_cap)
-  Crowdsale(_startTime, _endTime, _rate, _wallet)
+  Crowdsale(_startTime, _endTime, _rate, _wallet, _token)
   public
   {}
 
   /*---------------------------------overridden methods---------------------------------*/
-
-  /**
-   * overriding Crowdsale#createTokenContract to deploy new mesh token
-   */
-  function createTokenContract() internal returns (MintableToken) {
-    return new MeshToken();
-  }
-
 
   /**
    * overriding Crowdsale#buyTokens to keep track of wei contributed per address

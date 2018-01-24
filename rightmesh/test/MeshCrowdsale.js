@@ -15,13 +15,16 @@ contract('MeshCrowdsale', (accounts) => {
   const getContracts = (startTime = getCurrentTime(), endTime = getCurrentTime() + 1000000) => {
     /**
      * Contract deployment order:
-     * 1. Deploy crowdsale contract with all the required params
+     * 1. Deploy token contract first.
+     * 2. then deploy crowdsale contract.
+     * 3. Transfer ownership of token contract to crowdsale contract.
      */
-    return MeshCrowdsale.new(startTime, endTime, rate, wallet, crowdsaleCap).then(meshCrowdsale => {
-      return meshCrowdsale.token().then(meshTokenAddress => {
-        const meshToken = MeshToken.at(meshTokenAddress);
-        return { meshCrowdsale, meshToken, startTime, endTime };
-      });s
+    return MeshToken.new().then(meshToken => {
+      return MeshCrowdsale.new(startTime, endTime, rate, wallet, crowdsaleCap, meshToken.address).then(meshCrowdsale => {
+        return meshToken.transferOwnership(meshCrowdsale.address).then(() => {
+          return { meshCrowdsale, meshToken, startTime, endTime };
+        });
+      });
     });
   }
 
