@@ -1,5 +1,30 @@
 ## RightMesh Crowdsale Contracts
 
+## Contract Requirements
+
+### Token contract
+1. Fixed cap on total supply
+2. Mintable token by owner
+3. Pausable transfers with allowed exceptions for transfers from certain addresses.
+
+### Crowdsale contract
+1. Fixed cap on total ETH being accepted in crowdsale.
+2. Whitelisting addresses for amount of ETH contribution by owner.
+3. Non-refundable crowdsale with no minimum target.
+4. Transfer token ownership back to crowdsale owner for manual minting.
+
+### Overall crowdsale flow
+1. Deploy token contract.
+2. Call `pause` on the token to pause transfers.
+3. Deploy crowdsale contract with start time, end time, wei to token rate, wallet address, crowdsale cap and token address.
+4. Once crowdsale is done, call `transferTokenOwnership` within crowdsale to take back token ownership from crowdsale contract to original owner.
+5. Mint tokens for ECA's and pre-contributions.
+6. Call `Unpause` to enable token transfers.
+7. Go through the `tests` directory to see all the different scenarios covered.
+
+
+## Dev environment setup
+
 ### Setup Requirememts
 1. npm 5.4.x or higher
 2. node 8.7.x or higher
@@ -47,11 +72,3 @@ npm run compile
 ```
 npm run migrate
 ```
-
-### Overall crowdsale flow
-1. Deploy crowdsale contract with start time, end time, wei to token rate, wallet address and crowdsale cap.
-2. Call `pauseToken` method on token to pause transfers.
-3. Once crowdsale is done, call `transferTokenOwnership` within crowdsale to take back token ownership from crowdsale contract to original owner.
-4. Mint tokens for ECA's and pre-contributions.
-5. Call `Unpause` to enable token transfers.
-6. Go through the `tests` directory to see all the different scenarios covered.
