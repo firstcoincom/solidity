@@ -118,9 +118,7 @@ contract('MeshCrowdsale', (accounts) => {
        * 2. Token ownership transfer should fail.
        */
       return getContracts().then(({ meshCrowdsale, meshToken }) => {
-        return meshCrowdsale.transferTokenOwnership(addr1, { from: accounts[1] }).then(() => {
-          throw 'should not reach here';
-        }).catch(() => {
+        return meshCrowdsale.transferTokenOwnership({ from: accounts[1] }).then(() => {
           return meshToken.owner().then(owner => {
             assert.equal(owner, meshCrowdsale.address, "Token should still be owned by contract only");
           });
@@ -206,9 +204,7 @@ contract('MeshCrowdsale', (accounts) => {
        */
       return getContracts().then(({ meshCrowdsale, meshToken }) => {
         return meshCrowdsale.sendTransaction({value: 10, from: addr1}).then(() => {
-          throw "should not be able to buy tokens with 0 limit";
-        }).catch((  ) => {
-          meshToken.balanceOf(addr1).then(balance => {
+          return meshToken.balanceOf(addr1).then(balance => {
             assert.equal(0, balance, "Token balance should be 0");
           });
         });
@@ -225,9 +221,7 @@ contract('MeshCrowdsale', (accounts) => {
       return getContracts().then(({ meshCrowdsale, meshToken }) => {
         return meshCrowdsale.setLimit(addr1, contributionLimit).then(() => {
           return meshCrowdsale.sendTransaction({value: contributionLimit + 1, from: addr1}).then(() => {
-            throw "should not be able to buy tokens with 0 limit";
-          }).catch((  ) => {
-            meshToken.balanceOf(addr1).then(balance => {
+            return meshToken.balanceOf(addr1).then(balance => {
               assert.equal(0, balance, "Token balance should be 0");
             });
           });
@@ -306,8 +300,6 @@ contract('MeshCrowdsale', (accounts) => {
             return meshCrowdsale.sendTransaction({value: contributionAmount, from: addr1}).then(() => {
               // this transaction should fail as user is going above the limit with 3rd contribution
               return meshCrowdsale.sendTransaction({value: contributionAmount, from: addr1}).then(() => {
-                throw "Should not reach here";
-              }).catch(() => {
                 return Promise.all([
                   meshCrowdsale.weiContributions(addr1),
                   meshToken.balanceOf(addr1),
