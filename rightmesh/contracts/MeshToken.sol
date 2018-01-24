@@ -20,6 +20,14 @@ contract MeshToken is CappedToken, PausableToken {
   function MeshToken() CappedToken(cap) public {}
 
   /**
+   * @dev Overridder modifier to allow exceptions for pausing for a given address
+   */
+  modifier whenNotPaused() {
+    require(!paused || allowedTransfers[msg.sender]);
+    _;
+  }
+
+  /**
    * @dev method to updated allowedTransfers for an address
    * @param _address that needs to be updated
    * @param _allowedTransfers indicating if transfers are allowed or not
@@ -30,6 +38,11 @@ contract MeshToken is CappedToken, PausableToken {
   onlyOwner
   returns (bool)
   {
+    // don't allow owner to change this for themselves
+    // otherwise whenNotPaused will not work as expected for owner,
+    // therefore prohibiting them from calling pause/unpause.
+    require(_address != owner);
+
     allowedTransfers[_address] = _allowedTransfers;
     return true;
   }

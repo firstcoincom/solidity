@@ -34,9 +34,25 @@ contract('MeshToken', (accounts) => {
      */
     it('should allow setting allowedTransfers to true by owner', () => {
       return MeshToken.new().then(meshToken => {
+        return meshToken.updateAllowedTransfers(accounts[1], true).then(() => {
+          return meshToken.allowedTransfers(accounts[1]).then(allowedTransfers => {
+            assert.equal(allowedTransfers, true, "should not be allowed transfers by default");
+          });
+        });
+      });
+    });
+
+    /**
+     * Scenario:
+     * 1. Token contract is deployed successfully.
+     * 2. Owner tries to change the value of allowedTransfers for owner address.
+     * 3. Should not be allowed.
+     */
+    it('should not allow setting allowedTransfers to true for owner address', () => {
+      return MeshToken.new().then(meshToken => {
         return meshToken.updateAllowedTransfers(accounts[0], true).then(() => {
           return meshToken.allowedTransfers(accounts[0]).then(allowedTransfers => {
-            assert.equal(allowedTransfers, true, "should not be allowed transfers by default");
+            assert.equal(allowedTransfers, false, "should not be allowed transfers by default");
           });
         });
       });
@@ -261,6 +277,65 @@ contract('MeshToken', (accounts) => {
                 ]).then(results => {
                   assert.equal(results[0], 0, 'sender account should have a balance of 0 now');
                   assert.equal(results[1], 1000, 'receiver account should have a balance of 1000 now');
+                });
+              });
+            });
+          });
+        });
+      });
+    });
+
+    /**
+     * Scenario:
+     * 1. Token contract is deployed successfully.
+     * 2. Owner mints the tokens.
+     * 3. Owner paused token transfers.
+     * 4. Owner updates allowedTransfers for an address to true.
+     * 5. Transfer tokens from that address to another should work.
+     */
+    it('should allow transfers when paused for an address that is allowedTransfers', () => {
+      return MeshToken.new().then(meshToken => {
+        return meshToken.mint(accounts[1], 1000).then(() => {
+          return meshToken.pause().then(() => {
+            return meshToken.updateAllowedTransfers(accounts[1], true).then(() => {
+              return meshToken.transfer(accounts[0], 1000, { from: accounts[1] }).then(() => {
+                return Promise.all([
+                  meshToken.balanceOf(accounts[0]),
+                  meshToken.balanceOf(accounts[1]),
+                ]).then(results => {
+                  assert.equal(results[0], 1000, 'should have the balance of 1000 tokens by now');
+                  assert.equal(results[1], 0, 'should have the balance of 0 tokens by now');
+                });
+              });
+            });
+          });
+        });
+      });
+    });
+
+    /**
+     * Scenario:
+     * 1. Token contract is deployed successfully.
+     * 2. Owner mints the tokens.
+     * 3. Owner paused token transfers.
+     * 4. Owner updates allowedTransfers for an address to true.
+     * 4. Owner updates allowedTransfers for the same address to false.
+     * 5. Transfer tokens from that address to another should not work.
+     */
+    it('should not allow transfers when paused for an address that is not allowedTransfers', () => {
+      return MeshToken.new().then(meshToken => {
+        return meshToken.mint(accounts[1], 1000).then(() => {
+          return meshToken.pause().then(() => {
+            return meshToken.updateAllowedTransfers(accounts[1], true).then(() => {
+              return meshToken.updateAllowedTransfers(accounts[1], false).then(() => {
+                return meshToken.transfer(accounts[0], 1000, { from: accounts[1] }).then(() => {
+                  return Promise.all([
+                    meshToken.balanceOf(accounts[0]),
+                    meshToken.balanceOf(accounts[1]),
+                  ]).then(results => {
+                    assert.equal(results[0], 0, 'should have the balance of 0 tokens still');
+                    assert.equal(results[1], 1000, 'should have the balance of 1000 tokens still');
+                  });
                 });
               });
             });
