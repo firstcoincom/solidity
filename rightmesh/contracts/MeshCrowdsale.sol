@@ -6,6 +6,9 @@ import 'zeppelin-solidity/contracts/math/SafeMath.sol';
 import 'zeppelin-solidity/contracts/ownership/Ownable.sol';
 
 
+/**
+ * CappedCrowdsale limits the total number of wei that can be collected in the sale.
+ */
 contract MeshCrowdsale is CappedCrowdsale, Ownable {
 
   using SafeMath for uint256;
@@ -67,6 +70,7 @@ contract MeshCrowdsale is CappedCrowdsale, Ownable {
     return true;
   }
 
+  /*---------------------------------proxy methods for token when owned by contract---------------------------------*/
   /**
    * @dev Allows the current owner to transfer token control back to contract owner
    */

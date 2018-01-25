@@ -12,7 +12,7 @@ contract('MeshCrowdsale', (accounts) => {
 
   const getCurrentTime = () => Math.floor(Date.now() / 1000);
 
-  const getContracts = (startTime = getCurrentTime(), endTime = getCurrentTime() + 1000000) => {
+  const getContracts = (startTime, endTime) => {
     /**
      * Contract deployment order:
      * 1. Deploy token contract first.
@@ -20,6 +20,8 @@ contract('MeshCrowdsale', (accounts) => {
      * 3. Transfer ownership of token contract to crowdsale contract.
      */
     return MeshToken.new().then(meshToken => {
+      startTime = startTime || getCurrentTime();
+      endTime = endTime || (startTime + 10000000);
       return MeshCrowdsale.new(startTime, endTime, rate, wallet, crowdsaleCap, meshToken.address).then(meshCrowdsale => {
         return meshToken.transferOwnership(meshCrowdsale.address).then(() => {
           return { meshCrowdsale, meshToken, startTime, endTime };
@@ -141,6 +143,35 @@ contract('MeshCrowdsale', (accounts) => {
         return meshCrowdsale.pauseToken().then(() => {
           return meshToken.paused().then(paused => {
             assert.equal(paused, true, "Token should be paused now");
+          });
+        });
+      });
+    });
+
+    /**
+     * Scenario:
+     * 1. Contract owner calls pauseToken to pause token transfers
+     * 2. Token transfers should be paused now
+     * 3. Contract owner calls unpauseToken to unpause token transfers
+     * 4. Token transfers should be unpaused now
+     * 5. Contract owner calls pauseToken again to pause token transfers
+     * 6. Contract owner should not be able to pause the transfers again
+     */
+    it('should pause token only once requested by owner', () => {
+      return getContracts().then(({ meshCrowdsale, meshToken }) => {
+        return meshCrowdsale.pauseToken().then(() => {
+          return meshToken.paused().then(paused => {
+            assert.equal(paused, true, "Token should be paused now");
+            return meshCrowdsale.unpauseToken().then(() => {
+              return meshToken.paused().then(paused => {
+                assert.equal(paused, false, "Token should be unpaused now");
+                return meshCrowdsale.pauseToken().then(() => {
+                  return meshToken.paused().then(paused => {
+                    assert.equal(paused, false, "Token should still be unpaused now");
+                  });
+                });
+              });
+            });
           });
         });
       });
