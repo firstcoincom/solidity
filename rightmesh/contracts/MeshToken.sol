@@ -5,7 +5,7 @@ import 'zeppelin-solidity/contracts/token/ERC20/PausableToken.sol';
 
 /**
  * CappedToken token is Mintable token with a max cap on totalSupply that can ever be minted.
- * PausableToken overrides all transfers methods and adds a modifier to check id paused is set to false.
+ * PausableToken overrides all transfers methods and adds a modifier to check if paused is set to false.
  */
 contract MeshToken is CappedToken, PausableToken {
   string public name = "MESH TOKEN";
@@ -17,6 +17,10 @@ contract MeshToken is CappedToken, PausableToken {
    * @dev variable to keep track of what addresses are allowed to call transfer functions when token is paused.
    */
   mapping (address => bool) public allowedTransfers;
+
+  /**
+   * @dev variable to keep track if token has been paused once in its lifetime.
+   */
   bool public pausedOnce = false;
 
   /*------------------------------------constructor------------------------------------*/
