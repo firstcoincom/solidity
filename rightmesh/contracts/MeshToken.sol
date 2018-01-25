@@ -17,6 +17,7 @@ contract MeshToken is CappedToken, PausableToken {
    * @dev variable to keep track of what addresses are allowed to call transfer functions when token is paused.
    */
   mapping (address => bool) public allowedTransfers;
+  bool public pausedOnce = false;
 
   /*------------------------------------constructor------------------------------------*/
   /**
@@ -33,6 +34,17 @@ contract MeshToken is CappedToken, PausableToken {
   modifier whenNotPaused() {
     require(!paused || allowedTransfers[msg.sender]);
     _;
+  }
+
+  /**
+   * @dev overriding Pausable#pause method to only allow pausing the contract once
+   * Once unpaused token can not be paused again
+   * adding this to limit owner's ability to pause the token in future.
+   */
+  function pause() onlyOwner whenNotPaused public {
+    require(pausedOnce == false);
+    pausedOnce = true;
+    super.pause();
   }
 
   /*------------------------------------new methods------------------------------------*/

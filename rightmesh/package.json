@@ -27,6 +27,6 @@
     "ganache-cli": "^7.0.0-beta.0",
     "truffle": "4.0.5",
     "truffle-flattener": "1.2.0",
-    "zeppelin-solidity": "git+https://git@github.com/OpenZeppelin/zeppelin-solidity.git"
+    "zeppelin-solidity": "git+https://git@github.com/OpenZeppelin/zeppelin-solidity.git#4d7c3cca7590e554b76f6d91cbaaae87a6a2e2e3"
   }
 }
