@@ -60,7 +60,7 @@ contract MeshToken is CappedToken, PausableToken {
    * @return boolean indicating function success.
    */
   function updateAllowedTransfers(address _address, bool _allowedTransfers)
-  public
+  external
   onlyOwner
   returns (bool)
   {
