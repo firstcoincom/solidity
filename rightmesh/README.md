@@ -22,6 +22,22 @@
 6. Call `Unpause` to enable token transfers.
 7. Go through the `tests` directory to see all the different scenarios covered.
 
+## Backup strategies
+#### Temporary Pause
+1. Transfer token ownership back from contract to a wallet address by calling `MeshCrowdsale#transferTokenOwnership` method. This will limit the contracts ability to mint new tokens eventually pausing the crowdsale. By this time users who have already made their contributions would have received their tokens and ETH would have been secured in a wallet that was passed in during the contract initialization.
+2. Transfer token ownership back to the contract by calling `MeshToken#transferOwnership` method, therefore unpausing the crowdsale.
+
+#### Updating Crowdsale contract code
+1. Transfer token ownership back from contract to a wallet address by calling `MeshCrowdsale#transferTokenOwnership` method. This will limit the contracts ability to mint new tokens eventually pausing the crowdsale. By this time users who have already made their contributions would have received their tokens and ETH would have been secured in a wallet that was passed in during the contract initialization.
+2. Deploy a new crowdsale contract with the updated code.
+3. Transfer token ownership to the newly deployed contract by calling `MeshToken#transferOwnership` method, therefore starting the crowdsale with updated code.
+
+#### Issuing refunds
+1. Since this is a non-refundable sale, their is no logic in the contract that allows users to withdraw ETH in case the desired targets are not reached. However, if needed to refund ETH to the contributing wallets, we will need to write a new contract that will allow users to withdraw their ETH.
+2. The new contract will be reading off data from the existing crowdsale contract.
+3. This will require communication between the newly deployed contract for refund and the existing crowdsale contract to validate the limits on amount of ETH each user is able to withdraw.
+  - The gas requirments will increase due to this cross contract communication.
+
 
 ## Dev environment setup
 
