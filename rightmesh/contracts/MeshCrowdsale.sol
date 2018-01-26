@@ -63,7 +63,7 @@ contract MeshCrowdsale is CappedCrowdsale, Ownable {
    * @param _weiLimit new contribution limit
    * @return boolean indicating function success.
    */
-  function setLimit(address _address, uint256 _weiLimit) public onlyOwner returns (bool) {
+  function setLimit(address _address, uint256 _weiLimit) external onlyOwner returns (bool) {
     // only allow changing the limit to be greater than current contribution
     require(_weiLimit >= weiContributions[_address]);
     weiLimits[_address] = _weiLimit;
@@ -74,21 +74,21 @@ contract MeshCrowdsale is CappedCrowdsale, Ownable {
   /**
    * @dev Allows the current owner to transfer token control back to contract owner
    */
-  function transferTokenOwnership() public onlyOwner {
+  function transferTokenOwnership() external onlyOwner {
     token.transferOwnership(owner);
   }
 
   /**
    * @dev Allows the contract owner to pause the token transfers on deployed token
    */
-  function pauseToken() public onlyOwner {
+  function pauseToken() external onlyOwner {
     MeshToken(token).pause();
   }
 
   /**
    * @dev Allows the contract owner to unpause the token transfers on deployed token
    */
-  function unpauseToken() public onlyOwner {
+  function unpauseToken() external onlyOwner {
     MeshToken(token).unpause();
   }
 }
