@@ -2,7 +2,7 @@ var MeshToken = artifacts.require("./MeshToken.sol");
 var MeshCrowdsale = artifacts.require("./MeshCrowdsale.sol");
 
 function latestTime() {
-  // truffle version 4.0.x still depends on web3 version 0.2x.x  
+  // truffle version 4.0.x still depends on web3 version 0.2x.x
   // please refer to https://github.com/ethereum/wiki/wiki/JavaScript-API#web3ethgetblock
   // for web 3 documentation
   return web3.eth.getBlock('latest').timestamp;
@@ -32,6 +32,11 @@ console.log([startTime, endTime]);
 
 module.exports = deployer => {
   return deployer.deploy(MeshToken).then(() => {
-    return deployer.deploy(MeshCrowdsale, startTime, endTime, rate, wallet, convertEthToWei(crowdsaleCap), MeshToken.address);
+    return deployer.deploy(MeshCrowdsale, startTime, endTime, rate, wallet, convertEthToWei(crowdsaleCap), MeshToken.address).then(() => {
+      const tokenInstance = MeshToken.at(MeshToken.address);
+      return tokenInstance.pause().then(() => {
+        return tokenInstance.transferOwnership(MeshCrowdsale.address);
+      });
+    });
   });
 };
