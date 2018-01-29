@@ -90,3 +90,36 @@ npm run compile
 ```
 npm run migrate
 ```
+
+### Deploying using geth node
+1. Install geth node on Amazon EC2 instance. 
+2. Get access to EC2 instance on Amazon ec2.
+```
+ssh -i ~/.ssh/blockchain_nodes.pem ubuntu@geth.dev.firstcoin.host
+```
+3. Attach to geth javascript console.
+```
+$ sudo geth attach /media/geth/geth.ipc
+```
+4. Check the status of geth node. Make sure it's synced to the latest block: https://ropsten.etherscan.io/
+```
+> web3.eth.blockNumber
+```
+5. Check all available accounts
+```
+> eth.accounts
+```
+6. Check balance of a given account. Make sure that the account has enough funds.
+```
+> eth.getBalance(eth.accounts[2])
+```
+7. Unlock the account so that you can use it for deployment.
+```
+> personal.unlockAccount(eth.accounts[2], “firstcoin”, 300)
+```
+8. Using truffle to deploy the contract
+```
+$ truffle compile
+$ truffle migrate --network ropsten
+```
+
