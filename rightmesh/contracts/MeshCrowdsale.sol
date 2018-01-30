@@ -23,6 +23,11 @@ contract MeshCrowdsale is CappedCrowdsale, Ownable {
    */
   mapping (address => uint256) public weiContributions;
 
+  /**
+   * @dev whitelistingAgents keeps track of who is allowed to call the setLimit method
+   */
+  mapping (address => bool) public whitelistingAgents;
+
   /*---------------------------------constructor---------------------------------*/
 
   /**
@@ -57,13 +62,27 @@ contract MeshCrowdsale is CappedCrowdsale, Ownable {
 
   /*---------------------------------new methods---------------------------------*/
 
+
+  /**
+   * @dev Allows owner to add / remove whitelistingAgents
+   * @param _address that is being allowed or removed from whitelisting addresses
+   * @param _value boolean indicating if address is whitelisting agent or not
+   * @return boolean indicating function success.
+   */
+  function setWhitelistingAgent(address _address, bool _value) external onlyOwner returns (bool) {
+    whitelistingAgents[_address] = _value;
+    return true;
+  }
+
   /**
    * @dev Allows the current owner to update contribution limits
    * @param _addresses whose contribution limits should be changed
    * @param _weiLimit new contribution limit
    * @return boolean indicating function success.
    */
-  function setLimit(address[] _addresses, uint256 _weiLimit) external onlyOwner returns (bool) {
+  function setLimit(address[] _addresses, uint256 _weiLimit) external returns (bool) {
+    require(whitelistingAgents[msg.sender] == true);
+
     for (uint i = 0; i < _addresses.length; i++) {
       address _address = _addresses[i];
 
