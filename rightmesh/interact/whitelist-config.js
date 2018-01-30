@@ -3,7 +3,7 @@ const accountsToWhitelist = [
 ];
 
 const limitByEth = 2;
-consg gas = 92000;
+const gas = 92000;
 
 module.exports = {
   accountsToWhitelist,
