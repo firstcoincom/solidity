@@ -8,8 +8,8 @@ import 'zeppelin-solidity/contracts/token/ERC20/PausableToken.sol';
  * PausableToken overrides all transfers methods and adds a modifier to check if paused is set to false.
  */
 contract MeshToken is CappedToken, PausableToken {
-  string public name = "MESH TOKEN";
-  string public symbol = "MESH";
+  string public name = "RIGHTMESH TOKEN";
+  string public symbol = "RMESH";
   uint8 public decimals = 18;
   uint256 public cap = 1000000 ether;
 
