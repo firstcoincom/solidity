@@ -1,10 +1,7 @@
-const utils = require('./utils');
+const utils = require('../utils/utils');
 
 const startTime = utils.latestTime() + utils.duration.minutes(2);
 module.exports = {
-  // geth instance that the scripts should interact with
-  rpcHost: 'http://localhost:8545',
-
   // crowdsale constructor variables
   crowdsaleCap: 1,
   rate: 100,
@@ -19,5 +16,4 @@ module.exports = {
   // these variables are needed for post deployment scripts to interact with the contract
   // change these variables to interact with the right contract
   crowdsaleAddress: '0x0E32C1A5C1F8873f67eAE883fF8D228A713D5C72',
-  tokenAddress: '0x0E32C1A5C1F8873f67eAE883fF8D228A713D5C72',
 }

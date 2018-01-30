@@ -1,6 +1,6 @@
 const Web3 = require('web3');
 const fs = require("fs");
-const config = require('./config');
+const config = require('../config/general-settings');
 
 const getWeb3 = rpcHost => new Web3(new Web3.providers.HttpProvider(rpcHost));
 const web3 = getWeb3(config.rpcHost);
@@ -28,12 +28,13 @@ const getJson = file => {
   return JSON.parse(contents);
 }
 
-const crowdsaleJsonFile = 'build/contracts/MeshCrowdsale.json';
+const crowdsaleJsonFile = '../build/contracts/MeshCrowdsale.json';
+const tokenJsonFile = '../build/contracts/MeshToken.json';
 
 const getCrowdsaleContract = (_web3, contractAddress) => {
   const jsonContent = getJson(crowdsaleJsonFile);
   const Crowdsale = _web3.eth.contract(jsonContent.abi);
-  return Crowdsale.at(crowdsaleAddress);
+  return Crowdsale.at(contractAddress);
 }
 
 module.exports = {
