@@ -16,4 +16,5 @@ module.exports = {
   // these variables are needed for post deployment scripts to interact with the contract
   // change these variables to interact with the right contract
   crowdsaleAddress: '0x0E32C1A5C1F8873f67eAE883fF8D228A713D5C72',
+  gas: 42000
 }
