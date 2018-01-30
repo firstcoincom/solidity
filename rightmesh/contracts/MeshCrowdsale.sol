@@ -59,14 +59,28 @@ contract MeshCrowdsale is CappedCrowdsale, Ownable {
 
   /**
    * @dev Allows the current owner to update contribution limits
-   * @param _address whose contribution limits should be changed
+   * @param _addresses whose contribution limits should be changed
    * @param _weiLimit new contribution limit
    * @return boolean indicating function success.
    */
-  function setLimit(address _address, uint256 _weiLimit) external onlyOwner returns (bool) {
-    // only allow changing the limit to be greater than current contribution
-    require(_weiLimit >= weiContributions[_address]);
-    weiLimits[_address] = _weiLimit;
+  function setLimit(address[] _addresses, uint256 _weiLimit) external onlyOwner returns (bool) {
+    for (uint i = 0; i < _addresses.length; i++) {
+      address _address = _addresses[i];
+
+      // only allow changing the limit to be greater than current contribution
+      require(_weiLimit >= weiContributions[_address]);
+      weiLimits[_address] = _weiLimit;
+    }
+    return true;
+  }
+
+  /**
+   * @dev Allows the current owner to change the ETH to token generation rate.
+   * @param _rate indicating the new token generation rate.
+   * @return boolean indicating function success.
+   */
+  function setRate(uint256 _rate) external onlyOwner returns (bool) {
+    rate = _rate;
     return true;
   }
 
