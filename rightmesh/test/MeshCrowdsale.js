@@ -20,9 +20,16 @@ contract('MeshCrowdsale', (accounts) => {
      * 3. Transfer ownership of token contract to crowdsale contract.
      */
     return MeshToken.new().then(meshToken => {
-      startTime = startTime || getCurrentTime();
-      endTime = endTime || (startTime + 10000000);
-      return MeshCrowdsale.new(startTime, endTime, rate, wallet, crowdsaleCap, meshToken.address).then(meshCrowdsale => {
+      const deployCrowdsale = () => {
+        startTime = startTime || getCurrentTime();
+        endTime = endTime || (startTime + 10000000);
+        return MeshCrowdsale.new(startTime, endTime, rate, wallet, crowdsaleCap, meshToken.address);
+      };
+      // when deploying contract, we are setting startTime equal to current time
+      // occassionally time second flips before next deploy, therefore setting out start time in past
+      // that will fail deploy as crowdsale constructor requires startTiem to be in past or future
+      // catching the failure and redeploying it fixes the issue.
+      return deployCrowdsale().catch(deployCrowdsale).then(meshCrowdsale => {
         return meshToken.transferOwnership(meshCrowdsale.address).then(() => {
           return { meshCrowdsale, meshToken, startTime, endTime };
         });
@@ -80,17 +87,71 @@ contract('MeshCrowdsale', (accounts) => {
     });
   });
 
+  describe('setRate', () => {
+    it('should change the rate when called', () => {
+      const newRate = 100000;
+      return getContracts().then(({ meshCrowdsale, meshToken }) => {
+        return meshCrowdsale.setRate(newRate).then(() => {
+          return meshCrowdsale.rate().then(_rate => {
+            assert.equal(_rate, newRate, 'Rate should be equal to new rate now');
+          });
+        });
+      });
+    });
+
+    it('should not allow non owner to change the rate', () => {
+      const newRate = 100000;
+      return getContracts().then(({ meshCrowdsale, meshToken }) => {
+        return meshCrowdsale.setRate(newRate, { from: addr1 }).then(() => {
+          return meshCrowdsale.rate().then(_rate => {
+            assert.equal(_rate, rate, 'Rate should still be as original defined in the constructor');
+          });
+        });
+      });
+    });
+  });
+
   describe('setLimit',  () => {
-    it('should update limit correctly', () => {
+    it('should execute successfully for 0 addresses', () => {
+      /**
+       * Scenario:
+       * 1. Contract owner calling contract to update contribution limit for 0 addresses.
+       * 2. The function should execute successfully
+       */
+      return getContracts().then(({ meshCrowdsale, meshToken }) => {
+        return meshCrowdsale.setLimit([], contributionLimit);
+      });
+    });
+
+    it('should update limit correctly for 1 address', () => {
       /**
        * Scenario:
        * 1. Contract owner calling contract to update contribution limit for an address.
        * 2. Anyone being able to read weiLimits for an address.
        */
       return getContracts().then(({ meshCrowdsale, meshToken }) => {
-        return meshCrowdsale.setLimit(addr1, contributionLimit).then(() => {
+        return meshCrowdsale.setLimit([addr1], contributionLimit).then(() => {
           return meshCrowdsale.weiLimits(addr1).then(limit => {
             assert.equal(limit, contributionLimit, "Contribution limit should be set to contribution limit now");
+          });
+        });
+      });
+    });
+
+    it('should update limit correctly for multiple addresses', () => {
+      /**
+       * Scenario:
+       * 1. Contract owner calling contract to update contribution limit for multiple addresses.
+       * 2. Anyone being able to read weiLimits for an address.
+       */
+      return getContracts().then(({ meshCrowdsale, meshToken }) => {
+        return meshCrowdsale.setLimit([addr1, wallet], contributionLimit).then(() => {
+          return Promise.all([
+            meshCrowdsale.weiLimits(addr1),
+            meshCrowdsale.weiLimits(wallet),
+          ]).then(limits => {
+            assert.equal(limits[0], contributionLimit, "Contribution limit should be set to contribution limit now");
+            assert.equal(limits[1], contributionLimit, "Contribution limit should be set to contribution limit now");
           });
         });
       });
@@ -253,7 +314,7 @@ contract('MeshCrowdsale', (accounts) => {
        * 3. Transaction should fail
        */
       return getContracts().then(({ meshCrowdsale, meshToken }) => {
-        return meshCrowdsale.setLimit(addr1, contributionLimit).then(() => {
+        return meshCrowdsale.setLimit([addr1], contributionLimit).then(() => {
           return meshCrowdsale.sendTransaction({value: contributionLimit + 1, from: addr1}).then(() => {
             return meshToken.balanceOf(addr1).then(balance => {
               assert.equal(0, balance, "Token balance should be 0");
@@ -273,7 +334,7 @@ contract('MeshCrowdsale', (accounts) => {
        * 5. wieContribution for the address should be recorded.
        */
       return getContracts().then(({ meshCrowdsale, meshToken }) => {
-        return meshCrowdsale.setLimit(addr1, contributionLimit).then(() => {
+        return meshCrowdsale.setLimit([addr1], contributionLimit).then(() => {
           return meshCrowdsale.sendTransaction({value: contributionAmount, from: addr1}).then(() => {
             return Promise.all([
               meshCrowdsale.weiContributions(addr1),
@@ -299,7 +360,7 @@ contract('MeshCrowdsale', (accounts) => {
        * 7. wieContribution for the address should be recorded.
        */
       return getContracts().then(({ meshCrowdsale, meshToken }) => {
-        return meshCrowdsale.setLimit(addr1, contributionLimit).then(() => {
+        return meshCrowdsale.setLimit([addr1], contributionLimit).then(() => {
           return meshCrowdsale.sendTransaction({value: contributionAmount, from: addr1}).then(() => {
             return meshCrowdsale.sendTransaction({value: contributionAmount, from: addr1}).then(() => {
               return Promise.all([
@@ -329,7 +390,7 @@ contract('MeshCrowdsale', (accounts) => {
        * 9. wieContribution for the address should be recorded.
        */
       return getContracts().then(({ meshCrowdsale, meshToken }) => {
-        return meshCrowdsale.setLimit(addr1, contributionLimit).then(() => {
+        return meshCrowdsale.setLimit([addr1], contributionLimit).then(() => {
           return meshCrowdsale.sendTransaction({value: contributionAmount, from: addr1}).then(() => {
             return meshCrowdsale.sendTransaction({value: contributionAmount, from: addr1}).then(() => {
               // this transaction should fail as user is going above the limit with 3rd contribution
@@ -361,7 +422,7 @@ contract('MeshCrowdsale', (accounts) => {
       const endTime = startTime + 10000;
       const contributionDelay = 0;
       return getContracts(startTime, endTime).then(({ meshCrowdsale, meshToken }) => {
-        return meshCrowdsale.setLimit(addr1, contributionLimit).then(() => {
+        return meshCrowdsale.setLimit([addr1], contributionLimit).then(() => {
           return new Promise(resolve => {
             setTimeout(() => {
               meshCrowdsale.sendTransaction({value: contributionAmount, from: addr1})
@@ -388,7 +449,7 @@ contract('MeshCrowdsale', (accounts) => {
       const endTime = startTime + 1;
       const contributionDelay = 2;
       return getContracts(startTime, endTime).then(({ meshCrowdsale, meshToken }) => {
-        return meshCrowdsale.setLimit(addr1, contributionLimit).then(() => {
+        return meshCrowdsale.setLimit([addr1], contributionLimit).then(() => {
           return new Promise(resolve => {
             setTimeout(() => {
               meshCrowdsale.sendTransaction({value: contributionAmount, from: addr1})
@@ -415,7 +476,7 @@ contract('MeshCrowdsale', (accounts) => {
       const endTime = startTime + 2;
       const contributionDelay = 1;
       return getContracts(startTime, endTime).then(({ meshCrowdsale, meshToken }) => {
-        return meshCrowdsale.setLimit(addr1, contributionLimit).then(() => {
+        return meshCrowdsale.setLimit([addr1], contributionLimit).then(() => {
           return new Promise(resolve => {
             setTimeout(() => {
               meshCrowdsale.sendTransaction({value: contributionAmount, from: addr1})
@@ -441,7 +502,7 @@ contract('MeshCrowdsale', (accounts) => {
        * 3. User should not be able to contribute.
        */
       return getContracts().then(({ meshCrowdsale, meshToken }) => {
-        return meshCrowdsale.setLimit(addr1, crowdsaleCap + 100).then(() => {
+        return meshCrowdsale.setLimit([addr1], crowdsaleCap + 100).then(() => {
           return meshCrowdsale.sendTransaction({ value: crowdsaleCap + 100, from: addr1}).then(() => {
             return meshToken.balanceOf(addr1).then(balance => {
               assert.equal(0, balance, "Token balance should be 0");
@@ -459,7 +520,7 @@ contract('MeshCrowdsale', (accounts) => {
        * 3. User should be able to contribute.
        */
       return getContracts().then(({ meshCrowdsale, meshToken }) => {
-        return meshCrowdsale.setLimit(addr1, crowdsaleCap).then(() => {
+        return meshCrowdsale.setLimit([addr1], crowdsaleCap).then(() => {
           return meshCrowdsale.sendTransaction({ value: crowdsaleCap - 1, from: addr1}).then(() => {
             return meshToken.balanceOf(addr1).then(balance => {
               assert.equal(rate * (crowdsaleCap - 1), balance, "Token balance should be rate * (crowdsaleCap - 1)");
@@ -477,7 +538,7 @@ contract('MeshCrowdsale', (accounts) => {
        * 3. User should be able to contribute.
        */
       return getContracts().then(({ meshCrowdsale, meshToken }) => {
-        return meshCrowdsale.setLimit(addr1, crowdsaleCap).then(() => {
+        return meshCrowdsale.setLimit([addr1], crowdsaleCap).then(() => {
           return meshCrowdsale.sendTransaction({ value: crowdsaleCap, from: addr1}).then(() => {
             return meshToken.balanceOf(addr1).then(balance => {
               assert.equal(rate * crowdsaleCap, balance, "Token balance should be rate * crowdsaleCap");
