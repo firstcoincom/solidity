@@ -26,7 +26,7 @@ const crowdsaleCap = 2; // the cap of the total amount of ether which allows inv
 const rate = 100;
 const wallet = '0x08325b097057E3C8A354Cccbd3b4bEF94665e734';
 const startTime = latestTime() + duration.minutes(2);
-const endTime = startTime + duration.days(1);
+const endTime = startTime + duration.weeks(1);
 
 console.log([startTime, endTime]);
 
