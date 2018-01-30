@@ -88,6 +88,11 @@ contract('MeshCrowdsale', (accounts) => {
   });
 
   describe('setRate', () => {
+    /**
+     * Scenario:
+     * 1. Contract owner calling contract to set rate
+     * 2. It should allow contract owners to change the rate.
+     */
     it('should change the rate when called', () => {
       const newRate = 100000;
       return getContracts().then(({ meshCrowdsale, meshToken }) => {
@@ -99,6 +104,11 @@ contract('MeshCrowdsale', (accounts) => {
       });
     });
 
+    /**
+     * Scenario:
+     * 1. Non Contract owner calling contract to set rate
+     * 2. It should not allow non-contract owners to change the rate.
+     */
     it('should not allow non owner to change the rate', () => {
       const newRate = 100000;
       return getContracts().then(({ meshCrowdsale, meshToken }) => {
@@ -111,28 +121,89 @@ contract('MeshCrowdsale', (accounts) => {
     });
   });
 
+  describe('setWhitelistingAgent', () => {
+
+    /**
+     * Scenario:
+     * 1. Onwer calls setWhitelistingAgent to whitelist an address
+     * 2. Address is now marked as whitelisting agent.
+     */
+    it('should allow owner to set whitelisting agent to true', () => {
+      return getContracts().then(({ meshCrowdsale, meshToken }) => {
+        return meshCrowdsale.setWhitelistingAgent(addr1, true).then(() => {
+          return meshCrowdsale.whitelistingAgents(addr1).then(value => {
+            assert.equal(value, true, 'addr1 should be a whitelistingAgent by now');
+          });
+        });
+      });
+    });
+
+    /**
+     * Scenario:
+     * 1. Non Onwer calls setWhitelistingAgent to whitelist an address
+     * 2. Address is still not marked as whitelisting agent.
+     */
+    it('should not allow non-owner to add / remove whitelisting agent', () => {
+      return getContracts().then(({ meshCrowdsale, meshToken }) => {
+        return meshCrowdsale.setWhitelistingAgent(addr1, true, { from: addr1 }).then(() => {
+          return meshCrowdsale.whitelistingAgents(addr1).then(value => {
+            assert.equal(value, false, 'addr1 should not be a whitelistingAgent');
+          });
+        });
+      });
+    });
+
+    /**
+     * Scenario:
+     * 1. Onwer calls setWhitelistingAgent to whitelist an address
+     * 2. Address is now marked as whitelisting agent.
+     * 3. Owner calls the contract again to remove the whitelisting agent.
+     * 4. Address is now not marked as whitelisting agent.
+     */
+    it('should allow owner to set whitelisting agent to false', () => {
+      return getContracts().then(({ meshCrowdsale, meshToken }) => {
+        return meshCrowdsale.setWhitelistingAgent(addr1, true).then(() => {
+          return meshCrowdsale.whitelistingAgents(addr1).then(value => {
+            assert.equal(value, true, 'addr1 should be a whitelistingAgent by now');
+            return meshCrowdsale.setWhitelistingAgent(addr1, false).then(() => {
+              return meshCrowdsale.whitelistingAgents(addr1).then(value => {
+                assert.equal(value, false, 'addr1 should not be a whitelistingAgent by now');
+              });
+            });
+          });
+        });
+      });
+    });
+  });
+
   describe('setLimit',  () => {
     it('should execute successfully for 0 addresses', () => {
       /**
        * Scenario:
-       * 1. Contract owner calling contract to update contribution limit for 0 addresses.
-       * 2. The function should execute successfully
+       * 1. Contract owner calling contract to allow whitelisting agent
+       * 2. Whitelisting agent to update contribution limit for 0 addresses.
+       * 3. The function should execute successfully
        */
       return getContracts().then(({ meshCrowdsale, meshToken }) => {
-        return meshCrowdsale.setLimit([], contributionLimit);
+        return meshCrowdsale.setWhitelistingAgent(addr1, true).then(() => {
+          return meshCrowdsale.setLimit([], contributionLimit, { from: addr1 });
+        });
       });
     });
 
     it('should update limit correctly for 1 address', () => {
       /**
        * Scenario:
-       * 1. Contract owner calling contract to update contribution limit for an address.
-       * 2. Anyone being able to read weiLimits for an address.
+       * 1. Contract owner calling contract to allow whitelisting agent
+       * 2. Whitelisting agent to update contribution limit for an address.
+       * 3. Anyone being able to read weiLimits for an address.
        */
       return getContracts().then(({ meshCrowdsale, meshToken }) => {
-        return meshCrowdsale.setLimit([addr1], contributionLimit).then(() => {
-          return meshCrowdsale.weiLimits(addr1).then(limit => {
-            assert.equal(limit, contributionLimit, "Contribution limit should be set to contribution limit now");
+        return meshCrowdsale.setWhitelistingAgent(addr1, true).then(() => {
+          return meshCrowdsale.setLimit([addr1], contributionLimit, { from: addr1 }).then(() => {
+            return meshCrowdsale.weiLimits(addr1).then(limit => {
+              assert.equal(limit, contributionLimit, "Contribution limit should be set to contribution limit now");
+            });
           });
         });
       });
@@ -141,17 +212,42 @@ contract('MeshCrowdsale', (accounts) => {
     it('should update limit correctly for multiple addresses', () => {
       /**
        * Scenario:
-       * 1. Contract owner calling contract to update contribution limit for multiple addresses.
-       * 2. Anyone being able to read weiLimits for an address.
+       * 1. Contract owner calling contract to allow whitelisting agent
+       * 2. Whitelisting agent to update contribution limit for multiple addresses.
+       * 3. Anyone being able to read weiLimits for an address.
        */
       return getContracts().then(({ meshCrowdsale, meshToken }) => {
-        return meshCrowdsale.setLimit([addr1, wallet], contributionLimit).then(() => {
-          return Promise.all([
-            meshCrowdsale.weiLimits(addr1),
-            meshCrowdsale.weiLimits(wallet),
-          ]).then(limits => {
-            assert.equal(limits[0], contributionLimit, "Contribution limit should be set to contribution limit now");
-            assert.equal(limits[1], contributionLimit, "Contribution limit should be set to contribution limit now");
+        return meshCrowdsale.setWhitelistingAgent(addr1, true).then(() => {
+          return meshCrowdsale.setLimit([addr1, wallet], contributionLimit, { from: addr1 }).then(() => {
+            return Promise.all([
+              meshCrowdsale.weiLimits(addr1),
+              meshCrowdsale.weiLimits(wallet),
+            ]).then(limits => {
+              assert.equal(limits[0], contributionLimit, "Contribution limit should be set to contribution limit now");
+              assert.equal(limits[1], contributionLimit, "Contribution limit should be set to contribution limit now");
+            });
+          });
+        });
+      });
+
+      /**
+       * Scenario:
+       * 1. Contract owner calling contract to allow whitelisting agent
+       * 2. Non-Whitelisting agent to update contribution limit for multiple addresses.
+       * 3. Limits should still be 0
+       */
+      it('should not allow non-whitelisting agent to call setLimit', () => {
+        return getContracts().then(({ meshCrowdsale, meshToken }) => {
+          return meshCrowdsale.setWhitelistingAgent(addr1, true).then(() => {
+            return meshCrowdsale.setLimit([addr1, wallet], contributionLimit, { from: wallet }).then(() => {
+              return Promise.all([
+                meshCrowdsale.weiLimits(addr1),
+                meshCrowdsale.weiLimits(wallet),
+              ]).then(limits => {
+                assert.equal(limits[0], 0, "Contribution limit should still be set to 0");
+                assert.equal(limits[1], 0, "Contribution limit should still be set to 0");
+              });
+            });
           });
         });
       });
@@ -309,15 +405,18 @@ contract('MeshCrowdsale', (accounts) => {
     it('ERROR: should not be able to buy tokens more than the limit', () => {
       /**
        * Scenario:
-       * 1. Contract owner calls the contract to increase the contribution limit for address
-       * 2. User trying to contribute above set limits and total contribution cap is not reached yet
-       * 3. Transaction should fail
+       * 1. Contract owner calling contract to allow whitelisting agent
+       * 2. Whitelisting agentto to increase the contribution limit for address
+       * 3. User trying to contribute above set limits and total contribution cap is not reached yet
+       * 4. Transaction should fail
        */
       return getContracts().then(({ meshCrowdsale, meshToken }) => {
-        return meshCrowdsale.setLimit([addr1], contributionLimit).then(() => {
-          return meshCrowdsale.sendTransaction({value: contributionLimit + 1, from: addr1}).then(() => {
-            return meshToken.balanceOf(addr1).then(balance => {
-              assert.equal(0, balance, "Token balance should be 0");
+        return meshCrowdsale.setWhitelistingAgent(addr1, true).then(() => {
+          return meshCrowdsale.setLimit([addr1], contributionLimit, { from: addr1 }).then(() => {
+            return meshCrowdsale.sendTransaction({value: contributionLimit + 1, from: addr1}).then(() => {
+              return meshToken.balanceOf(addr1).then(balance => {
+                assert.equal(0, balance, "Token balance should be 0");
+              });
             });
           });
         });
@@ -327,21 +426,24 @@ contract('MeshCrowdsale', (accounts) => {
     it('SUCCESS: should be able to buy tokens in limit if the total cap is not yet reached', () => {
       /**
        * Scenario:
-       * 1. Contract owner calls the contract to increase the contribution limit for address
-       * 2. User trying to contribute within set limits and total contribution cap is not reached yet
-       * 3. Transaction should succeed
-       * 4. The address should have rate * contributionAmount number of tokens by now.
-       * 5. wieContribution for the address should be recorded.
+       * 1. Contract owner calling contract to allow whitelisting agent
+       * 2. Whitelisting agentto to increase the contribution limit for address
+       * 3. User trying to contribute within set limits and total contribution cap is not reached yet
+       * 4. Transaction should succeed
+       * 5. The address should have rate * contributionAmount number of tokens by now.
+       * 6. wieContribution for the address should be recorded.
        */
       return getContracts().then(({ meshCrowdsale, meshToken }) => {
-        return meshCrowdsale.setLimit([addr1], contributionLimit).then(() => {
-          return meshCrowdsale.sendTransaction({value: contributionAmount, from: addr1}).then(() => {
-            return Promise.all([
-              meshCrowdsale.weiContributions(addr1),
-              meshToken.balanceOf(addr1),
-            ]).then(results => {
-              assert.equal(results[0], contributionAmount, "weiContribution should be recorded");
-              assert.equal(results[1], rate * contributionAmount, "No. of tokens should be equal to rate * contributionAmount");
+        return meshCrowdsale.setWhitelistingAgent(addr1, true).then(() => {
+          return meshCrowdsale.setLimit([addr1], contributionLimit, { from: addr1 }).then(() => {
+            return meshCrowdsale.sendTransaction({value: contributionAmount, from: addr1}).then(() => {
+              return Promise.all([
+                meshCrowdsale.weiContributions(addr1),
+                meshToken.balanceOf(addr1),
+              ]).then(results => {
+                assert.equal(results[0], contributionAmount, "weiContribution should be recorded");
+                assert.equal(results[1], rate * contributionAmount, "No. of tokens should be equal to rate * contributionAmount");
+              });
             });
           });
         });
@@ -351,24 +453,27 @@ contract('MeshCrowdsale', (accounts) => {
     it('SUCCESS: should be able to buy tokens multiple times in limit if the total cap is not yet reached', () => {
       /**
        * Scenario:
-       * 1. Contract owner calls the contract to increase the contribution limit for address
-       * 2. User trying to contribute within set limits and total contribution cap is not reached yet
-       * 3. Transaction should succeed
-       * 4. User trying second time to contribute within set limits and total contribution cap is not reached yet
-       * 5. Transaction should succeed
-       * 6. The address should have rate * contributionAmount number of tokens by now.
-       * 7. wieContribution for the address should be recorded.
+       * 1. Contract owner calling contract to allow whitelisting agent
+       * 2. Whitelisting agentto to increase the contribution limit for address
+       * 3. User trying to contribute within set limits and total contribution cap is not reached yet
+       * 4. Transaction should succeed
+       * 5. User trying second time to contribute within set limits and total contribution cap is not reached yet
+       * 6. Transaction should succeed
+       * 7. The address should have rate * contributionAmount number of tokens by now.
+       * 8. wieContribution for the address should be recorded.
        */
       return getContracts().then(({ meshCrowdsale, meshToken }) => {
-        return meshCrowdsale.setLimit([addr1], contributionLimit).then(() => {
-          return meshCrowdsale.sendTransaction({value: contributionAmount, from: addr1}).then(() => {
+        return meshCrowdsale.setWhitelistingAgent(addr1, true).then(() => {
+          return meshCrowdsale.setLimit([addr1], contributionLimit, { from: addr1 }).then(() => {
             return meshCrowdsale.sendTransaction({value: contributionAmount, from: addr1}).then(() => {
-              return Promise.all([
-                meshCrowdsale.weiContributions(addr1),
-                meshToken.balanceOf(addr1),
-              ]).then(results => {
-                assert.equal(results[0], 2 * contributionAmount, "weiContribution should be recorded");
-                assert.equal(results[1], rate * 2 * contributionAmount, "No. of tokens should be equal to rate * 2 * contributionAmount");
+              return meshCrowdsale.sendTransaction({value: contributionAmount, from: addr1}).then(() => {
+                return Promise.all([
+                  meshCrowdsale.weiContributions(addr1),
+                  meshToken.balanceOf(addr1),
+                ]).then(results => {
+                  assert.equal(results[0], 2 * contributionAmount, "weiContribution should be recorded");
+                  assert.equal(results[1], rate * 2 * contributionAmount, "No. of tokens should be equal to rate * 2 * contributionAmount");
+                });
               });
             });
           });
@@ -379,28 +484,31 @@ contract('MeshCrowdsale', (accounts) => {
     it('ERROR: should not be able to buy tokens multiple times total contribution is outside limit even if the total cap is not yet reached', () => {
       /**
        * Scenario:
-       * 1. Contract owner calls the contract to increase the contribution limit for address
-       * 2. User trying to contribute within set limits and total contribution cap is not reached yet
-       * 3. Transaction should succeed
-       * 4. User contributes again within the limits
-       * 5. Transaction should succeed
-       * 6. User contributes again but this time exceeds the limit
-       * 7. Transaction should fail
-       * 8. The address should have rate * contributionAmount number of tokens by now.
-       * 9. wieContribution for the address should be recorded.
+       * 1. Contract owner calling contract to allow whitelisting agent
+       * 2. Whitelisting agentto to increase the contribution limit for address
+       * 3. User trying to contribute within set limits and total contribution cap is not reached yet
+       * 4. Transaction should succeed
+       * 5. User contributes again within the limits
+       * 6. Transaction should succeed
+       * 7. User contributes again but this time exceeds the limit
+       * 8. Transaction should fail
+       * 9. The address should have rate * contributionAmount number of tokens by now.
+       * 10. wieContribution for the address should be recorded.
        */
       return getContracts().then(({ meshCrowdsale, meshToken }) => {
-        return meshCrowdsale.setLimit([addr1], contributionLimit).then(() => {
-          return meshCrowdsale.sendTransaction({value: contributionAmount, from: addr1}).then(() => {
+        return meshCrowdsale.setWhitelistingAgent(addr1, true).then(() => {
+          return meshCrowdsale.setLimit([addr1], contributionLimit, { from: addr1 }).then(() => {
             return meshCrowdsale.sendTransaction({value: contributionAmount, from: addr1}).then(() => {
-              // this transaction should fail as user is going above the limit with 3rd contribution
               return meshCrowdsale.sendTransaction({value: contributionAmount, from: addr1}).then(() => {
-                return Promise.all([
-                  meshCrowdsale.weiContributions(addr1),
-                  meshToken.balanceOf(addr1),
-                ]).then(results => {
-                  assert.equal(results[0], 2 * contributionAmount, "weiContribution should be recorded");
-                  assert.equal(results[1], rate * 2 * contributionAmount, "No. of tokens should be equal to rate * 2 * contributionAmount");
+                // this transaction should fail as user is going above the limit with 3rd contribution
+                return meshCrowdsale.sendTransaction({value: contributionAmount, from: addr1}).then(() => {
+                  return Promise.all([
+                    meshCrowdsale.weiContributions(addr1),
+                    meshToken.balanceOf(addr1),
+                  ]).then(results => {
+                    assert.equal(results[0], 2 * contributionAmount, "weiContribution should be recorded");
+                    assert.equal(results[1], rate * 2 * contributionAmount, "No. of tokens should be equal to rate * 2 * contributionAmount");
+                  });
                 });
               });
             });
@@ -422,17 +530,19 @@ contract('MeshCrowdsale', (accounts) => {
       const endTime = startTime + 10000;
       const contributionDelay = 0;
       return getContracts(startTime, endTime).then(({ meshCrowdsale, meshToken }) => {
-        return meshCrowdsale.setLimit([addr1], contributionLimit).then(() => {
-          return new Promise(resolve => {
-            setTimeout(() => {
-              meshCrowdsale.sendTransaction({value: contributionAmount, from: addr1})
-              .then(() => {
-                meshToken.balanceOf(addr1).then(balance => {
-                  assert.equal(0, balance, "Token balance should be 0");
-                  resolve('');
-                });
-              })
-            }, contributionDelay * 1000);
+        return meshCrowdsale.setWhitelistingAgent(addr1, true).then(() => {
+          return meshCrowdsale.setLimit([addr1], contributionLimit, { from: addr1 }).then(() => {
+            return new Promise(resolve => {
+              setTimeout(() => {
+                meshCrowdsale.sendTransaction({value: contributionAmount, from: addr1})
+                .then(() => {
+                  meshToken.balanceOf(addr1).then(balance => {
+                    assert.equal(0, balance, "Token balance should be 0");
+                    resolve('');
+                  });
+                })
+              }, contributionDelay * 1000);
+            });
           });
         });
       });
@@ -449,17 +559,19 @@ contract('MeshCrowdsale', (accounts) => {
       const endTime = startTime + 1;
       const contributionDelay = 2;
       return getContracts(startTime, endTime).then(({ meshCrowdsale, meshToken }) => {
-        return meshCrowdsale.setLimit([addr1], contributionLimit).then(() => {
-          return new Promise(resolve => {
-            setTimeout(() => {
-              meshCrowdsale.sendTransaction({value: contributionAmount, from: addr1})
-              .then(() => {
-                meshToken.balanceOf(addr1).then(balance => {
-                  assert.equal(0, balance, "Token balance should be 0");
-                  resolve('');
-                });
-              })
-            }, contributionDelay * 1000);
+        return meshCrowdsale.setWhitelistingAgent(addr1, true).then(() => {
+          return meshCrowdsale.setLimit([addr1], contributionLimit, { from: addr1 }).then(() => {
+            return new Promise(resolve => {
+              setTimeout(() => {
+                meshCrowdsale.sendTransaction({value: contributionAmount, from: addr1})
+                .then(() => {
+                  meshToken.balanceOf(addr1).then(balance => {
+                    assert.equal(0, balance, "Token balance should be 0");
+                    resolve('');
+                  });
+                })
+              }, contributionDelay * 1000);
+            });
           });
         });
       });
@@ -476,17 +588,19 @@ contract('MeshCrowdsale', (accounts) => {
       const endTime = startTime + 2;
       const contributionDelay = 1;
       return getContracts(startTime, endTime).then(({ meshCrowdsale, meshToken }) => {
-        return meshCrowdsale.setLimit([addr1], contributionLimit).then(() => {
-          return new Promise(resolve => {
-            setTimeout(() => {
-              meshCrowdsale.sendTransaction({value: contributionAmount, from: addr1})
-              .then(() => {
-                meshToken.balanceOf(addr1).then(balance => {
-                  assert.equal(contributionAmount * rate, balance, "Token balance should be contributionAmount * rate");
-                  resolve('');
-                });
-              })
-            }, contributionDelay * 1000);
+        return meshCrowdsale.setWhitelistingAgent(addr1, true).then(() => {
+          return meshCrowdsale.setLimit([addr1], contributionLimit, { from: addr1 }).then(() => {
+            return new Promise(resolve => {
+              setTimeout(() => {
+                meshCrowdsale.sendTransaction({value: contributionAmount, from: addr1})
+                .then(() => {
+                  meshToken.balanceOf(addr1).then(balance => {
+                    assert.equal(contributionAmount * rate, balance, "Token balance should be contributionAmount * rate");
+                    resolve('');
+                  });
+                })
+              }, contributionDelay * 1000);
+            });
           });
         });
       });
@@ -502,10 +616,12 @@ contract('MeshCrowdsale', (accounts) => {
        * 3. User should not be able to contribute.
        */
       return getContracts().then(({ meshCrowdsale, meshToken }) => {
-        return meshCrowdsale.setLimit([addr1], crowdsaleCap + 100).then(() => {
-          return meshCrowdsale.sendTransaction({ value: crowdsaleCap + 100, from: addr1}).then(() => {
-            return meshToken.balanceOf(addr1).then(balance => {
-              assert.equal(0, balance, "Token balance should be 0");
+        return meshCrowdsale.setWhitelistingAgent(addr1, true).then(() => {
+          return meshCrowdsale.setLimit([addr1], crowdsaleCap + 100, { from: addr1 }).then(() => {
+            return meshCrowdsale.sendTransaction({ value: crowdsaleCap + 100, from: addr1}).then(() => {
+              return meshToken.balanceOf(addr1).then(balance => {
+                assert.equal(0, balance, "Token balance should be 0");
+              });
             });
           });
         });
@@ -520,10 +636,12 @@ contract('MeshCrowdsale', (accounts) => {
        * 3. User should be able to contribute.
        */
       return getContracts().then(({ meshCrowdsale, meshToken }) => {
-        return meshCrowdsale.setLimit([addr1], crowdsaleCap).then(() => {
-          return meshCrowdsale.sendTransaction({ value: crowdsaleCap - 1, from: addr1}).then(() => {
-            return meshToken.balanceOf(addr1).then(balance => {
-              assert.equal(rate * (crowdsaleCap - 1), balance, "Token balance should be rate * (crowdsaleCap - 1)");
+        return meshCrowdsale.setWhitelistingAgent(addr1, true).then(() => {
+          return meshCrowdsale.setLimit([addr1], crowdsaleCap, { from: addr1 }).then(() => {
+            return meshCrowdsale.sendTransaction({ value: crowdsaleCap - 1, from: addr1}).then(() => {
+              return meshToken.balanceOf(addr1).then(balance => {
+                assert.equal(rate * (crowdsaleCap - 1), balance, "Token balance should be rate * (crowdsaleCap - 1)");
+              });
             });
           });
         });
@@ -538,10 +656,12 @@ contract('MeshCrowdsale', (accounts) => {
        * 3. User should be able to contribute.
        */
       return getContracts().then(({ meshCrowdsale, meshToken }) => {
-        return meshCrowdsale.setLimit([addr1], crowdsaleCap).then(() => {
-          return meshCrowdsale.sendTransaction({ value: crowdsaleCap, from: addr1}).then(() => {
-            return meshToken.balanceOf(addr1).then(balance => {
-              assert.equal(rate * crowdsaleCap, balance, "Token balance should be rate * crowdsaleCap");
+        return meshCrowdsale.setWhitelistingAgent(addr1, true).then(() => {
+          return meshCrowdsale.setLimit([addr1], crowdsaleCap, { from: addr1 }).then(() => {
+            return meshCrowdsale.sendTransaction({ value: crowdsaleCap, from: addr1}).then(() => {
+              return meshToken.balanceOf(addr1).then(balance => {
+                assert.equal(rate * crowdsaleCap, balance, "Token balance should be rate * crowdsaleCap");
+              });
             });
           });
         });
