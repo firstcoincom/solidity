@@ -11,7 +11,7 @@ contract MeshToken is CappedToken, PausableToken {
   string public name = "MESH TOKEN";
   string public symbol = "MESH";
   uint8 public decimals = 18;
-  uint256 public cap = 100000000;
+  uint256 public cap = 1000000 ether;
 
   /**
    * @dev variable to keep track of what addresses are allowed to call transfer functions when token is paused.
