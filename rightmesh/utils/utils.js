@@ -37,10 +37,17 @@ const getCrowdsaleContract = (_web3, contractAddress) => {
   return Crowdsale.at(contractAddress);
 }
 
+const getTokenContract = (_web3, contractAddress) => {
+  const jsonContent = getJson(tokenJsonFile);
+  const Token = _web3.eth.contract(jsonContent.abi);
+  return Token.at(contractAddress);
+}
+
 module.exports = {
   convertEthToWei,
   latestTime,
   duration,
   getWeb3,
   getCrowdsaleContract,
+  getTokenContract,
 }
