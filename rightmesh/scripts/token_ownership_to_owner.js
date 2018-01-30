@@ -4,13 +4,13 @@ const utils = require('../utils/utils');
 
 const web3 = utils.getWeb3(generalSettings.rpcHost);
 
-// instantiate by address
+// instantiate crowdsale by crowdsale contract address
 var CrowdsaleInstance = utils.getCrowdsaleContract(
   web3,
   crowdsaleConfig.crowdsaleAddress
 );
 
-// white list a given accounts
+// transfer token contract ownership back to owner 
 CrowdsaleInstance.transferTokenOwnership(
   {
     gas: crowdsaleConfig.gas,
