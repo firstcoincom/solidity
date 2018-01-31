@@ -1,7 +1,6 @@
 const generalSettings = require('../config/general-settings');
-const crowdsaleConfig = require('../config/crowdsale-config');
-const tokenConfig = require('../config/token-config');
 const addressConfig = require('../config/address-config');
+const gasConfig = require('../config/gas-config');
 const utils = require('../utils/utils');
 
 const web3 = utils.getWeb3(generalSettings.rpcHost);
@@ -12,12 +11,10 @@ var TokenInstance = utils.getTokenContract(
   addressConfig.tokenAddress
 );
 
-// Transfer token contract ownership to crowdsale contract 
-TokenInstance.transferOwnership(
-  addressConfig.crowdsaleAddress,
+// Call unpause on the token contract
+TokenInstance.unpause(
   {
-    gas: tokenConfig.gas,
-    from: tokenConfig.ownerAccount
+    gas: gasConfig.methodGas,
+    from: addressConfig.ownerAddress,
   }
 );
-

@@ -1,6 +1,6 @@
 const generalSettings = require('../config/general-settings');
-const tokenConfig = require('../config/token-config');
-const addressConfig = require('../config/address-config.js');
+const gasConfig = require('../config/gas-config');
+const addressConfig = require('../config/address-config');
 const utils = require('../utils/utils');
 
 const web3 = utils.getWeb3(generalSettings.rpcHost);
@@ -11,10 +11,10 @@ var TokenInstance = utils.getTokenContract(
   addressConfig.tokenAddress
 );
 
-// Call unpause on the token contract
-TokenInstance.unpause(
+// Call pause on the token contract
+TokenInstance.pause(
   {
-    gas: tokenConfig.gas,
-    from: tokenConfig.ownerAccount
+    gas: gasConfig.methodGas,
+    from: addressConfig.ownerAddress
   }
 );
