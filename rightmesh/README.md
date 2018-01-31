@@ -115,7 +115,7 @@ $ sudo geth attach /media/geth/geth.ipc
 ```
 7. Unlock the account so that you can use it for deployment.
 ```
-> personal.unlockAccount(eth.accounts[2], “firstcoin”, 300)
+> personal.unlockAccount(eth.accounts[2], "firstcoin", 300)
 ```
 8. Using truffle to deploy the contract
 ```
