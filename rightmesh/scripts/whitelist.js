@@ -1,5 +1,5 @@
 const generalSettings = require('../config/general-settings');
-const crowdsaleConfig = require('../config/crowdsale-config');
+const addressConfig = require('../config/address-config');
 const whitelistConfig = require('../config/whitelist-config');
 const addressConfig = require('../config/address-config.js');
 const utils = require('../utils/utils');
@@ -18,6 +18,6 @@ crowdsaleInstance.setLimit(
   web3.toWei( whitelistConfig.limitByEth, 'ether'),
   {
     gas: whitelistConfig.gas,
-    from: crowdsaleConfig.ownerAccount
+    from: addressConfig.whitelistAgentAddress
   }
 );
