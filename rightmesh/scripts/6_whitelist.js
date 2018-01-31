@@ -1,7 +1,8 @@
 const generalSettings = require('../config/general-settings');
 const addressConfig = require('../config/address-config');
 const whitelistConfig = require('../config/whitelist-config');
-const addressConfig = require('../config/address-config.js');
+const gasConfig = require('../config/gas-config');
+
 const utils = require('../utils/utils');
 
 const web3 = utils.getWeb3(generalSettings.rpcHost);
@@ -17,7 +18,7 @@ crowdsaleInstance.setLimit(
   whitelistConfig.accountsToWhitelist,
   web3.toWei( whitelistConfig.limitByEth, 'ether'),
   {
-    gas: whitelistConfig.gas,
+    gas: gasConfig.methodGas,
     from: addressConfig.whitelistAgentAddress
   }
 );
