@@ -1,6 +1,6 @@
 const utils = require('../utils/utils');
 
-const startTime = utils.latestTime() + utils.duration.minutes(2);
+const startTime = utils.latestTime() + utils.duration.minutes(5);
 module.exports = {
   // crowdsale constructor variables
   crowdsaleCap: 1,
@@ -12,9 +12,5 @@ module.exports = {
   // account from geth that is being used for deployment
   // this account will also be the owner of crowdsale and eventually token contract
   ownerAccount: '0xa30109d16db929bb45e08db7127d92a5f5114472',
-
-  // these variables are needed for post deployment scripts to interact with the contract
-  // change these variables to interact with the right contract
-  crowdsaleAddress: '0x0E32C1A5C1F8873f67eAE883fF8D228A713D5C72',
-  gas: 42000
+  gas: 4000000
 }
