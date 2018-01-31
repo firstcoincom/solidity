@@ -1,5 +1,6 @@
 const generalSettings = require('../config/general-settings');
 const crowdsaleConfig = require('../config/crowdsale-config');
+const addressConfig = require('../config/address-config.js');
 const utils = require('../utils/utils');
 
 const web3 = utils.getWeb3(generalSettings.rpcHost);
@@ -7,7 +8,7 @@ const web3 = utils.getWeb3(generalSettings.rpcHost);
 // instantiate crowdsale by crowdsale contract address
 var CrowdsaleInstance = utils.getCrowdsaleContract(
   web3,
-  crowdsaleConfig.crowdsaleAddress
+  addressConfig.crowdsaleAddress
 );
 
 // transfer token contract ownership back to owner 
