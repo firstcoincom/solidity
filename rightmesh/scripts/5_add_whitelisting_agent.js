@@ -1,6 +1,6 @@
 const generalSettings = require('../config/general-settings');
-const crowdsaleConfig = require('../config/crowdsale-config');
 const addressConfig = require('../config/address-config');
+const gasConfig = require('../config/gas-config');
 const utils = require('../utils/utils');
 
 const web3 = utils.getWeb3(generalSettings.rpcHost);
@@ -15,7 +15,7 @@ CrowdsaleInstance.setWhitelistingAgent(
   addressConfig.whitelistAgentAddress,
   true,
   {
-    from: crowdsaleConfig.ownerAccount,
-    gas: crowdsaleConfig.gas,
+    from: addressConfig.ownerAddress,
+    gas: gasConfig.methodGas,
   }
 )

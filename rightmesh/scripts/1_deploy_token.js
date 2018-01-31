@@ -1,5 +1,6 @@
 const generalSettings = require('../config/general-settings');
-const tokenConfig = require('../config/token-config');
+const addressConfig = require('../config/address-config');
+const gasConfig = require('../config/gas-config');
 const contracts = require('../utils/contracts');
 const utils = require('../utils/utils');
 
@@ -11,6 +12,6 @@ var tokenBytecode = contracts.getTokenBytecode();
 
 // Deploy token contract
 var TokenContract = web3.eth.contract(tokenABI);
-var TokenInstance = TokenContract.new({data: tokenBytecode, from: tokenConfig.ownerAccount, gas: 4000000});
+var TokenInstance = TokenContract.new({data: tokenBytecode, from: addressConfig.ownerAddress, gas: gasConfig.deployGas});
 
 console.log("Token Contract is creating at: " + TokenInstance.transactionHash);

@@ -1,6 +1,7 @@
 const generalSettings = require('../config/general-settings');
 const crowdsaleConfig = require('../config/crowdsale-config');
 const addressConfig = require('../config/address-config.js');
+const gasConfig = require('../config/gas-config');
 const contracts = require('../utils/contracts');
 const utils = require('../utils/utils');
 
@@ -17,12 +18,12 @@ var CrowdsaleInstance = CrowdsaleContract.new(
     crowdsaleConfig.endTime,
     crowdsaleConfig.rate,
     crowdsaleConfig.wallet,
-    utils.convertEthToWei(crowdsaleConfig.crowdsaleCap), 
+    utils.convertEthToWei(crowdsaleConfig.crowdsaleCap),
     addressConfig.tokenAddress,
-    { 
-        data: crowdsaleBytecode, 
-        from: crowdsaleConfig.ownerAccount, 
-        gas: crowdsaleConfig.gas
+    {
+        data: crowdsaleBytecode,
+        from: addressConfig.ownerAddress,
+       gas: gasConfig.deployGas
     });
 
 console.log("Crowdsale Contract is creating at: " + CrowdsaleInstance.transactionHash);
