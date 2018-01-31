@@ -13,6 +13,7 @@ var CrowdsaleInstance = utils.getCrowdsaleContract(
 
 CrowdsaleInstance.setWhitelistingAgent(
   addressConfig.whitelistAgentAddress,
+  true,
   {
     from: crowdsaleConfig.ownerAccount,
     gas: crowdsaleConfig.gas,
