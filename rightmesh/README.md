@@ -131,9 +131,35 @@ $ node 2_pause_token.js
 ```
 $ node 3_deploy_crowdsale.js
 ```
-11. Transfer the token contract ownership to crowdsale contract. So the crowdsale contract will be able to mint tokens.
+12. Transfer the token contract ownership to crowdsale contract. So the crowdsale contract will be able to mint tokens.
 ```
 $ node 4_token_owenrship_to_crowdsale.js
 ```
+13. Set up a whitelist agent, which can whitelist contributors to get into the crowsale. The whitelist agent's address is configured in address-config.js.
+```
+$ node 5_add_whitelisting_agent.js
+```
+14. Whitelist agent now can white list contributors. Only whitelisted contributors can participate into the ico. The limit and contributor's address can be configured in whitelist-config.js.
+```
+$ node 6_whitelist.js
+```
+15. Once the public crowsale is done. The crowdsale contract will transfer the ownership of token contract back to the owner.
+```
+$ node 7_token_ownership_to_owner.js
+```
+16. The next step is for the owner to mint tokens for pre-allocated tokens.
+```
+$ node 8_mint_tokens.js
+```
+17. XXXXXXXXXXXXXXXXXXXXXXXXXXXXX.
+```
+$ node 9_add_transfer_exceptions.js
+```
+18. Unpause the token contract to enable token transfers on the ethereum mainet.
+```
+$ node 10_unpause_token.js
+```
+
+
 
 
