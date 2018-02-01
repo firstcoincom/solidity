@@ -17,7 +17,7 @@ var CrowdsaleInstance = CrowdsaleContract.new(
     crowdsaleConfig.startTime,
     crowdsaleConfig.endTime,
     crowdsaleConfig.rate,
-    crowdsaleConfig.wallet,
+    addressConfig.ethWalletAddress,
     utils.convertEthToWei(crowdsaleConfig.crowdsaleCap),
     addressConfig.tokenAddress,
     {
