@@ -92,16 +92,13 @@ npm run migrate
 ```
 
 ### Deploying using geth node
-1. Install geth node on Amazon EC2 instance. 
-2. Get access to EC2 instance on Amazon ec2.
-```
-ssh -i ~/.ssh/blockchain_nodes.pem ubuntu@geth.dev.firstcoin.host
-```
+1. Install geth ethereum node. 
+2. Get access to the machine which hosts the geth node.
 3. Attach to geth javascript console.
 ```
 $ sudo geth attach /media/geth/geth.ipc
 ```
-4. Check the status of geth node. Make sure it's synced to the latest block: https://ropsten.etherscan.io/
+4. Check the status of geth node. Make sure it's synced to the latest block.
 ```
 > web3.eth.blockNumber
 ```
@@ -109,17 +106,34 @@ $ sudo geth attach /media/geth/geth.ipc
 ```
 > eth.accounts
 ```
-6. Check balance of a given account. Make sure that the account has enough funds.
+6. Check balance of the account for contract deployment. Make sure that the account has enough funds.
 ```
-> eth.getBalance(eth.accounts[2])
+> eth.getBalance(eth.accounts[0])
 ```
 7. Unlock the account so that you can use it for deployment.
 ```
-> personal.unlockAccount(eth.accounts[2], "firstcoin", 300)
+> personal.unlockAccount(eth.accounts[0])
 ```
-8. Using truffle to deploy the contract
+8. Configure the address-config.js file based on the comments in the file.
 ```
-$ truffle compile
-$ truffle migrate --network ropsten
+$ vim config/address-config.js
 ```
+9. Deploy the token contract and verify the code on ether scan. After the contract is deployed, fill the token
+contract address in the address config file.
+```
+$ node 1_deploy_token.js
+```
+10. Pause the token transfer. So the token is NOT transferable during the crowdsale.
+```
+$ node 2_pause_token.js
+```
+11. Deploy the crowdsale contract and verify the code on ether scan. After the contract is deployed, fill the crowdsale contract address in the address-config.js file. The parameters of crowdsale contract can be configured in crowdsale-config.js file.
+```
+$ node 3_deploy_crowdsale.js
+```
+11. Transfer the token contract ownership to crowdsale contract. So the crowdsale contract will be able to mint tokens.
+```
+$ node 4_token_owenrship_to_crowdsale.js
+```
+
 
