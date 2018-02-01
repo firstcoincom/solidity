@@ -92,7 +92,7 @@ npm run migrate
 ```
 
 ### Deploying using geth node
-1. Install geth ethereum node. 
+1. Install geth ethereum node.
 2. Get access to the machine which hosts the geth node.
 3. Attach to geth javascript console.
 ```
@@ -151,7 +151,7 @@ $ node 7_token_ownership_to_owner.js
 ```
 $ node 8_mint_tokens.js
 ```
-17. XXXXXXXXXXXXXXXXXXXXXXXXXXXXX.
+17. Enable individual address to allow transfers to distribute tokens to ECA's and pre-contributors.
 ```
 $ node 9_add_transfer_exceptions.js
 ```
@@ -159,7 +159,3 @@ $ node 9_add_transfer_exceptions.js
 ```
 $ node 10_unpause_token.js
 ```
-
-
-
-
