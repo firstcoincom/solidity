@@ -13,17 +13,20 @@ var crowdsaleBytecode = contracts.getCrowdsaleBytecode();
 
 // Deploy crowdsale contract
 var CrowdsaleContract = web3.eth.contract(crowdsaleABI);
+
 var CrowdsaleInstance = CrowdsaleContract.new(
-    crowdsaleConfig.startTime,
-    crowdsaleConfig.endTime,
-    crowdsaleConfig.rate,
-    addressConfig.ethWalletAddress,
-    utils.convertEthToWei(crowdsaleConfig.crowdsaleCap),
-    addressConfig.tokenAddress,
-    {
-        data: crowdsaleBytecode,
-        from: addressConfig.ownerAddress,
-       gas: gasConfig.deployGas
-    });
+  crowdsaleConfig.startTime,
+  crowdsaleConfig.endTime,
+  crowdsaleConfig.rate,
+  addressConfig.ethWalletAddress,
+  utils.convertEthToWei(crowdsaleConfig.crowdsaleCap),
+  utils.convertEthToWei(crowdsaleConfig.minimumContribution),
+  addressConfig.tokenAddress,
+  {
+    data: crowdsaleBytecode,
+    from: addressConfig.ownerAddress,
+    gas: gasConfig.deployGas
+  }
+);
 
 console.log("Crowdsale Contract is creating at: " + CrowdsaleInstance.transactionHash);
