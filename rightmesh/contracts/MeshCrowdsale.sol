@@ -1,4 +1,4 @@
-pragma solidity ^0.4.15;
+pragma solidity ^0.4.18;
 
 import './MeshToken.sol';
 import 'zeppelin-solidity/contracts/crowdsale/CappedCrowdsale.sol';
@@ -94,8 +94,9 @@ contract MeshCrowdsale is CappedCrowdsale, Ownable {
       address _address = _addresses[i];
 
       // only allow changing the limit to be greater than current contribution
-      require(_weiLimit >= weiContributions[_address]);
-      weiLimits[_address] = _weiLimit;
+      if(_weiLimit >= weiContributions[_address]) {
+        weiLimits[_address] = _weiLimit;
+      }
     }
     return true;
   }
