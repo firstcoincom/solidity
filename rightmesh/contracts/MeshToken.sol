@@ -10,7 +10,7 @@ import 'zeppelin-solidity/contracts/token/ERC20/PausableToken.sol';
 contract MeshToken is CappedToken, PausableToken {
   string public name = "RIGHTMESH TOKEN";
   string public symbol = "RMESH";
-  uint8 public decimals = 18;
+  uint256 public decimals = 18;
   uint256 public cap = 1000000 ether;
 
   /**
