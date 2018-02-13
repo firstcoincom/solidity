@@ -1,4 +1,4 @@
-pragma solidity ^0.4.15;
+pragma solidity ^0.4.18;
 
 import './MeshToken.sol';
 import 'zeppelin-solidity/contracts/crowdsale/CappedCrowdsale.sol';
