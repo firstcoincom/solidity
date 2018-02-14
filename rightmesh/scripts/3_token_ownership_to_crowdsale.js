@@ -16,6 +16,6 @@ TokenInstance.transferOwnership(
   addressConfig.crowdsaleAddress,
   {
     gas: gasConfig.methodGas,
-    from: addressConfig.ownerAddress
+    from: addressConfig.ownerAddress,
   }
 );
