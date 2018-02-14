@@ -1,24 +1,20 @@
 const generalSettings = require('../config/general-settings');
 const addressConfig = require('../config/address-config');
-const whitelistConfig = require('../config/whitelist-config');
 const gasConfig = require('../config/gas-config');
-
 const utils = require('../utils/utils');
 
 const web3 = utils.getWeb3(generalSettings.rpcHost);
 
-// instantiate by address
-var crowdsaleInstance = utils.getCrowdsaleContract(
+// instantiate crowdsale by crowdsale contract address
+var CrowdsaleInstance = utils.getCrowdsaleContract(
   web3,
   addressConfig.crowdsaleAddress
 );
 
-// white list a given accounts
-crowdsaleInstance.setLimit(
-  whitelistConfig.accountsToWhitelist,
-  web3.toWei( whitelistConfig.limitByEth, 'ether'),
+CrowdsaleInstance.transferOwnership(
+  addressConfig.newOwnerAddress,
   {
     gas: gasConfig.methodGas,
-    from: addressConfig.whitelistAgentAddress,
+    from: addressConfig.ownerAddress,
   }
 );
