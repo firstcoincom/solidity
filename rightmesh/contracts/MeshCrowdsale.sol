@@ -1,4 +1,4 @@
-pragma solidity ^0.4.15;
+pragma solidity ^0.4.18;
 
 import './MeshToken.sol';
 import 'zeppelin-solidity/contracts/crowdsale/CappedCrowdsale.sol';
@@ -28,16 +28,22 @@ contract MeshCrowdsale is CappedCrowdsale, Ownable {
    */
   mapping (address => bool) public whitelistingAgents;
 
+  /**
+   * @dev minimumContribution keeps track of what should be the minimum contribution required per address
+   */
+  uint256 public minimumContribution;
   /*---------------------------------constructor---------------------------------*/
 
   /**
    * @dev Constructor for MeshCrowdsale contract
    */
-  function MeshCrowdsale(uint256 _startTime, uint256 _endTime, uint256 _rate, address _wallet, uint256 _cap, MeshToken _token)
+  function MeshCrowdsale(uint256 _startTime, uint256 _endTime, uint256 _rate, address _wallet, uint256 _cap, uint256 _minimumContribution, MeshToken _token)
   CappedCrowdsale(_cap)
   Crowdsale(_startTime, _endTime, _rate, _wallet, _token)
   public
-  {}
+  {
+    minimumContribution = _minimumContribution;
+  }
 
   /*---------------------------------overridden methods---------------------------------*/
 
@@ -55,7 +61,8 @@ contract MeshCrowdsale is CappedCrowdsale, Ownable {
    */
   function validPurchase() internal view returns (bool) {
     bool withinLimit = weiContributions[msg.sender] <= weiLimits[msg.sender];
-    return withinLimit && super.validPurchase();
+    bool atleastMinimumContribution = weiContributions[msg.sender] >= minimumContribution;
+    return atleastMinimumContribution && withinLimit && super.validPurchase();
   }
 
 
@@ -87,8 +94,9 @@ contract MeshCrowdsale is CappedCrowdsale, Ownable {
       address _address = _addresses[i];
 
       // only allow changing the limit to be greater than current contribution
-      require(_weiLimit >= weiContributions[_address]);
-      weiLimits[_address] = _weiLimit;
+      if(_weiLimit >= weiContributions[_address]) {
+        weiLimits[_address] = _weiLimit;
+      }
     }
     return true;
   }
@@ -103,25 +111,20 @@ contract MeshCrowdsale is CappedCrowdsale, Ownable {
     return true;
   }
 
+  /**
+   * @dev Allows the current owner to change the required minimum contribution.
+   * @param _minimumContribution indicating the minimum required contribution.
+   * @return boolean indicating function success.
+   */
+  function setMinimumContribution(uint256 _minimumContribution) external onlyOwner returns (bool) {
+    minimumContribution = _minimumContribution;
+    return true;
+  }
   /*---------------------------------proxy methods for token when owned by contract---------------------------------*/
   /**
    * @dev Allows the current owner to transfer token control back to contract owner
    */
   function transferTokenOwnership() external onlyOwner {
     token.transferOwnership(owner);
-  }
-
-  /**
-   * @dev Allows the contract owner to pause the token transfers on deployed token
-   */
-  function pauseToken() external onlyOwner {
-    MeshToken(token).pause();
-  }
-
-  /**
-   * @dev Allows the contract owner to unpause the token transfers on deployed token
-   */
-  function unpauseToken() external onlyOwner {
-    MeshToken(token).unpause();
   }
 }

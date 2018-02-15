@@ -98,12 +98,12 @@ contract('MeshToken', (accounts) => {
     /**
      * Scenario:
      * 1. Token contract is deployed successfully.
-     * 2. By default paused is set to false for the token.
+     * 2. By default paused is set to true for the token.
      */
-    it('should be unpaused by default', () => {
+    it('should be paused by default', () => {
       return MeshToken.new().then(meshToken => {
         return meshToken.paused().then(paused => {
-          assert.equal(paused, false, "should be unpaused by default");
+          assert.equal(paused, true, "should be paused by default");
         });
       });
     });
@@ -111,13 +111,13 @@ contract('MeshToken', (accounts) => {
     /**
      * Scenario:
      * 1. Token contract is deployed successfully.
-     * 2. Owner calls pause on the contract.
+     * 2. Owner calls unpause on the contract.
      */
-    it('should allow owner to pause the token', () => {
+    it('should allow owner to unpause', () => {
       return MeshToken.new().then(meshToken => {
-        return meshToken.pause().then(() => {
+        return meshToken.unpause().then(() => {
           return meshToken.paused().then(paused => {
-            assert.equal(paused, true, "should be paused by now");
+            assert.equal(paused, false, "should be unpaused by now");
           });
         });
       });
@@ -126,13 +126,13 @@ contract('MeshToken', (accounts) => {
     /**
      * Scenario:
      * 1. Token contract is deployed successfully.
-     * 2. Owner calls pause on the contract.
-     * 3. Owner calls unpause on the contract.
+     * 2. Owner calls unpause on the token.
+     * 3. Owner calls pause on the contract.
      */
-    it('should allow owner to unpause', () => {
+    it('should not do anything on pause', () => {
       return MeshToken.new().then(meshToken => {
-        return meshToken.pause().then(() => {
-          return meshToken.unpause().then(() => {
+        return meshToken.unpause().then(() => {
+          return meshToken.pause().then(() => {
             return meshToken.paused().then(paused => {
               assert.equal(paused, false, "should be unpaused by now");
             });
@@ -144,31 +144,13 @@ contract('MeshToken', (accounts) => {
     /**
      * Scenario:
      * 1. Token contract is deployed successfully.
-     * 2. Non-onwer tries to call pause on the contract.
-     */
-    it('should not allow non-owner to pause the token', () => {
-      return MeshToken.new().then(meshToken => {
-        return meshToken.pause({ from: accounts[1] }).then(() => {
-          return meshToken.paused().then(paused => {
-            assert.equal(paused, false, "should not be paused");
-          });
-        })
-      });
-    });
-
-    /**
-     * Scenario:
-     * 1. Token contract is deployed successfully.
-     * 2. Owner calls pause on the contract.
-     * 3. Non-owner tries to call unpause on the contract.
+     * 2. Non-owner tries to call unpause on the contract.
      */
     it('should not allow non-owner to unpause the token', () => {
       return MeshToken.new().then(meshToken => {
-        return meshToken.pause().then(() => {
-          return meshToken.unpause({ from: accounts[1]}).then(() => {
-            return meshToken.paused().then(paused => {
-              assert.equal(paused, true, "should not be unpaused");
-            });
+        return meshToken.unpause({ from: accounts[1]}).then(() => {
+          return meshToken.paused().then(paused => {
+            assert.equal(paused, true, "should not be unpaused");
           });
         });
       });
@@ -177,31 +159,16 @@ contract('MeshToken', (accounts) => {
     /**
      * Scenario:
      * 1. Token contract is deployed successfully.
-     * 2. Owner calls pause on the contract.
-     * 3. Owner tries to call pause again without first unpausing the contract.
-     */
-    it('should only allow owner to pause when not paused', () => {
-      return MeshToken.new().then(meshToken => {
-        return meshToken.pause().then(() => {
-          return meshToken.pause().then(() => {
-            return meshToken.paused().then(paused => {
-              assert.equal(paused, true, "should be paused by now");
-            });
-          });
-        });
-      });
-    });
-
-    /**
-     * Scenario:
-     * 1. Token contract is deployed successfully.
-     * 2. Owner tries to call unpause on already unpaused token.
+     * 2. Owner calls unpause on the token.
+     * 3. Owner tries to call unpause on already unpaused token.
      */
     it('should only allow owner to unpause when paused', () => {
       return MeshToken.new().then(meshToken => {
         return meshToken.unpause().then(() => {
-          return meshToken.paused().then(paused => {
-            assert.equal(paused, false, "should be unpaused already");
+          return meshToken.unpause().then(() => {
+            return meshToken.paused().then(paused => {
+              assert.equal(paused, false, "should be unpaused already");
+            });
           });
         });
       });
@@ -214,9 +181,9 @@ contract('MeshToken', (accounts) => {
      * Scenario:
      * 1. Token contract is deployed successfully.
      * 2. Owner mints the token
-     * 3. Transfer token from one account to another should work.
+     * 3. Transfer token from one account to another should not work.
      */
-    it('should allow transfers by default', () => {
+    it('should not allow transfers by default', () => {
       return MeshToken.new().then(meshToken => {
         return meshToken.mint(accounts[0], 1000).then(() => {
           return meshToken.transfer(accounts[1], 1000).then(() => {
@@ -224,8 +191,8 @@ contract('MeshToken', (accounts) => {
               meshToken.balanceOf(accounts[0]),
               meshToken.balanceOf(accounts[1])
             ]).then(results => {
-              assert.equal(results[0], 0, 'sender account should have a balance of 0 now');
-              assert.equal(results[1], 1000, 'receiver account should have a balance of 1000 now');
+              assert.equal(results[0], 1000, 'sender account should still have its original balance');
+              assert.equal(results[1], 0, 'receiver account should still be at 0');
             });
           });
         });
@@ -236,20 +203,20 @@ contract('MeshToken', (accounts) => {
      * Scenario:
      * 1. Token contract is deployed successfully.
      * 2. Owner mints the tokens.
-     * 3. Owner paused token transfers.
+     * 3. Owner unpaused token transfers.
      * 4. Transfer tokens from one account to another should not work.
      */
-    it('should not allow transfers when paused', () => {
+    it('should allow transfers when unpaused', () => {
       return MeshToken.new().then(meshToken => {
         return meshToken.mint(accounts[0], 1000).then(() => {
-          return meshToken.pause().then(() => {
+          return meshToken.unpause().then(() => {
             return meshToken.transfer(accounts[1], 1000).then(() => {
               return Promise.all([
                 meshToken.balanceOf(accounts[0]),
                 meshToken.balanceOf(accounts[1])
               ]).then(results => {
-                assert.equal(results[0], 1000, 'sender account should still have its original balance');
-                assert.equal(results[1], 0, 'receiver account should still be at 0');
+                assert.equal(results[0], 0, 'sender account should have a balance of 0 now');
+                assert.equal(results[1], 1000, 'receiver account should have a balance of 1000 now');
               });
             });
           });
@@ -261,51 +228,20 @@ contract('MeshToken', (accounts) => {
      * Scenario:
      * 1. Token contract is deployed successfully.
      * 2. Owner mints the tokens.
-     * 3. Owner paused token transfers.
-     * 4. Owner unpaused token transfers.
-     * 5. Transfer tokens from one account to another should not work.
-     */
-    it('should allow transfers when not paused (same as default)', () => {
-      return MeshToken.new().then(meshToken => {
-        return meshToken.mint(accounts[0], 1000).then(() => {
-          return meshToken.pause().then(() => {
-            return meshToken.unpause().then(() => {
-              return meshToken.transfer(accounts[1], 1000).then(() => {
-                return Promise.all([
-                  meshToken.balanceOf(accounts[0]),
-                  meshToken.balanceOf(accounts[1])
-                ]).then(results => {
-                  assert.equal(results[0], 0, 'sender account should have a balance of 0 now');
-                  assert.equal(results[1], 1000, 'receiver account should have a balance of 1000 now');
-                });
-              });
-            });
-          });
-        });
-      });
-    });
-
-    /**
-     * Scenario:
-     * 1. Token contract is deployed successfully.
-     * 2. Owner mints the tokens.
-     * 3. Owner paused token transfers.
-     * 4. Owner updates allowedTransfers for an address to true.
-     * 5. Transfer tokens from that address to another should work.
+     * 3. Owner updates allowedTransfers for an address to true.
+     * 4. Transfer tokens from that address to another should work.
      */
     it('should allow transfers when paused for an address that is allowedTransfers', () => {
       return MeshToken.new().then(meshToken => {
         return meshToken.mint(accounts[1], 1000).then(() => {
-          return meshToken.pause().then(() => {
-            return meshToken.updateAllowedTransfers(accounts[1], true).then(() => {
-              return meshToken.transfer(accounts[0], 1000, { from: accounts[1] }).then(() => {
-                return Promise.all([
-                  meshToken.balanceOf(accounts[0]),
-                  meshToken.balanceOf(accounts[1]),
-                ]).then(results => {
-                  assert.equal(results[0], 1000, 'should have the balance of 1000 tokens by now');
-                  assert.equal(results[1], 0, 'should have the balance of 0 tokens by now');
-                });
+          return meshToken.updateAllowedTransfers(accounts[1], true).then(() => {
+            return meshToken.transfer(accounts[0], 1000, { from: accounts[1] }).then(() => {
+              return Promise.all([
+                meshToken.balanceOf(accounts[0]),
+                meshToken.balanceOf(accounts[1]),
+              ]).then(results => {
+                assert.equal(results[0], 1000, 'should have the balance of 1000 tokens by now');
+                assert.equal(results[1], 0, 'should have the balance of 0 tokens by now');
               });
             });
           });
@@ -317,25 +253,22 @@ contract('MeshToken', (accounts) => {
      * Scenario:
      * 1. Token contract is deployed successfully.
      * 2. Owner mints the tokens.
-     * 3. Owner paused token transfers.
-     * 4. Owner updates allowedTransfers for an address to true.
+     * 3. Owner updates allowedTransfers for an address to true.
      * 4. Owner updates allowedTransfers for the same address to false.
      * 5. Transfer tokens from that address to another should not work.
      */
     it('should not allow transfers when paused for an address that is not allowedTransfers', () => {
       return MeshToken.new().then(meshToken => {
         return meshToken.mint(accounts[1], 1000).then(() => {
-          return meshToken.pause().then(() => {
-            return meshToken.updateAllowedTransfers(accounts[1], true).then(() => {
-              return meshToken.updateAllowedTransfers(accounts[1], false).then(() => {
-                return meshToken.transfer(accounts[0], 1000, { from: accounts[1] }).then(() => {
-                  return Promise.all([
-                    meshToken.balanceOf(accounts[0]),
-                    meshToken.balanceOf(accounts[1]),
-                  ]).then(results => {
-                    assert.equal(results[0], 0, 'should have the balance of 0 tokens still');
-                    assert.equal(results[1], 1000, 'should have the balance of 1000 tokens still');
-                  });
+          return meshToken.updateAllowedTransfers(accounts[1], true).then(() => {
+            return meshToken.updateAllowedTransfers(accounts[1], false).then(() => {
+              return meshToken.transfer(accounts[0], 1000, { from: accounts[1] }).then(() => {
+                return Promise.all([
+                  meshToken.balanceOf(accounts[0]),
+                  meshToken.balanceOf(accounts[1]),
+                ]).then(results => {
+                  assert.equal(results[0], 0, 'should have the balance of 0 tokens still');
+                  assert.equal(results[1], 1000, 'should have the balance of 1000 tokens still');
                 });
               });
             });

@@ -15,6 +15,6 @@ var CrowdsaleInstance = utils.getCrowdsaleContract(
 CrowdsaleInstance.transferTokenOwnership(
   {
     gas: gasConfig.methodGas,
-    from: addressConfig.ownerAddress
+    from: addressConfig.ownerAddress,
   }
 );

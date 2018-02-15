@@ -5,17 +5,16 @@ const utils = require('../utils/utils');
 
 const web3 = utils.getWeb3(generalSettings.rpcHost);
 
-// Instantiate token by token contract address
-var TokenInstance = utils.getTokenContract(
+// instantiate crowdsale by crowdsale contract address
+var CrowdsaleInstance = utils.getCrowdsaleContract(
   web3,
-  addressConfig.tokenAddress
+  addressConfig.crowdsaleAddress
 );
 
-// Transfer token contract ownership to crowdsale contract
-TokenInstance.transferOwnership(
-  addressConfig.crowdsaleAddress,
+CrowdsaleInstance.transferOwnership(
+  addressConfig.newOwnerAddress,
   {
     gas: gasConfig.methodGas,
-    from: addressConfig.ownerAddress
+    from: addressConfig.ownerAddress,
   }
 );

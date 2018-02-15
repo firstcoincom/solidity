@@ -84,13 +84,6 @@ npm run compile
   - `build/contracts/MeshToken.json` - truffle build that can be deployed using truffle migrations
   - `build/contracts/MeshCrowdsale.json` - truffle build that can be deployed using truffle migrations
 
-### Deploying using truffle
-1. Adjust variables in the `migrations/2_mesh_crowdsale.js` file.
-2. Run the following command to deploy to local rpc network using truffle
-```
-npm run migrate
-```
-
 ### Deploying using geth node
 1. Install geth ethereum node.
 2. Get access to the machine which hosts the geth node.
@@ -123,17 +116,18 @@ contract address in the address config file.
 ```
 $ node 1_deploy_token.js
 ```
-10. Pause the token transfer. So the token is NOT transferable during the crowdsale.
+10. Deploy the crowdsale contract and verify the code on ether scan. After the contract is deployed, fill the crowdsale contract address in the address-config.js file. The parameters of crowdsale contract can be configured in crowdsale-config.js file.
 ```
-$ node 2_pause_token.js
+$ node 2_deploy_crowdsale.js
 ```
-11. Deploy the crowdsale contract and verify the code on ether scan. After the contract is deployed, fill the crowdsale contract address in the address-config.js file. The parameters of crowdsale contract can be configured in crowdsale-config.js file.
+11. Transfer the token contract ownership to crowdsale contract. So the crowdsale contract will be able to mint tokens.
 ```
-$ node 3_deploy_crowdsale.js
+$ node 3_token_ownership_to_crowdsale.js
 ```
-12. Transfer the token contract ownership to crowdsale contract. So the crowdsale contract will be able to mint tokens.
+12. Finalize and set both rate and minimum contribution limit
 ```
-$ node 4_token_owenrship_to_crowdsale.js
+$ node 4_set_rate.js
+$ node 4_set_minimum_contribution.js
 ```
 13. Set up a whitelist agent, which can whitelist contributors to get into the crowsale. The whitelist agent's address is configured in address-config.js.
 ```
