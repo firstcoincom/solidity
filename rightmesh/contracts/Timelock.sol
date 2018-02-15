@@ -80,7 +80,7 @@ contract Timelock {
     // sends tokens from contract to address
     function withdraw(uint256 _amount) public returns (bool) {
       if (withdrawal_allowed[msg.sender] && (_amount <= withdrawTokenCeiling(msg.sender))) {
-        withdrawn_tokens[msg.sender] -= _amount;
+        withdrawn_tokens[msg.sender] += _amount;
         // do the transfer
       } else {
         return false;
