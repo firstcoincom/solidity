@@ -1,90 +1,88 @@
 // Contract to make MeshTokens available to employees with time.
 
 pragma solidity ^0.4.18;
-contract Timelock {
 
-  // todo use SAFEMATH!
-  // todo decimals is a bad idea and won't work - need a way around this should use smallest unit for tokens (wei) and for time seconds is probably alright.
-  // percentages need to be whole numbers... not sure on cleanest way to do this at the moment.
+import 'zeppelin-solidity/contracts/math/SafeMath.sol';
+import 'zeppelin-solidity/contracts/ownership/Ownable.sol';
 
-    address public owner; //owner of contract
+contract Timelock is Ownable {
 
-    uint public cliff_time = 1518696000; //non feb 15 2018
-    uint public cliff_amount = 0.2; //percentage - cliff_amount + gradual_amount = 1 THIS WON'T COMPILE AND DECIMALS ARE A VERY BAD IDEA
-    uint public gradual_amount = 0.8; //percentage - cliff_amount + gradual_amount = 1 THIS WON'T COMPILE AND DECIMALS ARE A VERY BAD IDEA
-    uint public timelock_end = 1525132800; //may 1 00:00:00 2018
+  using SafeMath for uint256;
 
-    uint public rate_per_second;
+  uint256 public cliff_time = 1550268556; // epoch timestamp
+  uint256 public cliff_amount = 200000000; // in billionths, percentage is too small for rounding, between 0 and 1 000 000 000
+  uint256 public gradual_amount = 800000000; // in billionths, percentage is too small for rounding, between 0 and 1 000 000 000
+  uint256 public timelock_end = 1581804556;
 
-    // allocation
-    mapping (address => uint256) public allocated_tokens;
-    mapping (address => uint256) public withdrawn_tokens;
-    //ability to flag accounts
-    mapping (address => bool) public withdrawal_allowed;
+  uint256 public gradual_unlock_rate_per_second;
+  uint256 public whole_unit = 1000000000; // need a better name for this, it is like a percentage is to 100 as ??? is to 1 billion. This is to help with rounding.
 
-    //modifiers
-    modifier onlyOwner() {
-      require(msg.sender == owner);
-      _;
+  mapping (address => uint256) public allocated_tokens;
+  mapping (address => uint256) public withdrawn_tokens;
+  mapping (address => bool) public withdrawal_allowed;
+
+  // constructor initializes allocated_tokens to address, owner, and rate per day (so that it needen't be calculated more than once) and does some sanity checks on provided values
+  function Timelock() public {
+
+    // sanity checks
+    assert(cliff_amount.add(gradual_amount) <= whole_unit);
+    assert(cliff_time > now);
+    assert(timelock_end > cliff_time);
+
+    allocated_tokens[0xaDe4A31E4FeC4a652B7A11A79a019bACf53124a0] = 10 ether;
+    withdrawal_allowed[0xaDe4A31E4FeC4a652B7A11A79a019bACf53124a0] = true;
+
+    allocated_tokens[0x6E5D1b7a916Cc41fCbC7a3428ca9692A1EB591f0] = 15 szabo;
+    withdrawal_allowed[0x6E5D1b7a916Cc41fCbC7a3428ca9692A1EB591f0] = true;
+
+    allocated_tokens[0x486C4898f36785Fcd671D3589C963dDA87235831] = 20 finney;
+    withdrawal_allowed[0x486C4898f36785Fcd671D3589C963dDA87235831] = true;
+
+    gradual_unlock_rate_per_second = gradual_amount.div(timelock_end.sub(cliff_time));
+  }
+
+  // ADMIN FUNCTIONS
+
+  // owner can pause withdraw functionality for an address
+  function pauseWithdrawal(address _address) onlyOwner public returns (bool) {
+    withdrawal_allowed[_address] = false;
+    return true;
+  }
+
+  // owner can unpause withdraw functionality for an address
+  function unpauseWithdrawal(address _address) onlyOwner public returns (bool) {
+    withdrawal_allowed[_address] = true;
+    return true;
+  }
+
+  // WITHDRAW FUNCTIONS
+
+  // returns the max percentage that can be withdrawn at this point in time and is a multiplier between 0 and 100.
+  function withdrawPercentageCeiling() private view returns (uint256) {
+    if (now < cliff_time) {
+      return 0;
+    } else if (now > cliff_time && now < timelock_end) {
+      return (cliff_amount.add(gradual_unlock_rate_per_second.mul(now.sub(cliff_time)))); // worried about rounding here todo investigate
+    } else if (now > timelock_end) {
+      return 100;
     }
+  }
 
-    //constructor initializes allocated_tokens to address, owner, and rate per day (so that it needen't be calculated more than once)
-    function Timelock() public {
-      owner = msg.sender;
+  // helper returns max withdrawal for an address, delays division for better rounding
+  function withdrawTokenCeiling(address _address) private view returns (uint256) {
+    return (withdrawPercentageCeiling().mul(allocated_tokens[_address].sub(withdrawn_tokens[_address]))).div(whole_unit);
+  }
 
-      allocated_tokens[0xaDe4A31E4FeC4a652B7A11A79a019bACf53124a0] = 10;
-      withdrawal_allowed[0xaDe4A31E4FeC4a652B7A11A79a019bACf53124a0] = true;
-
-      allocated_tokens[0x6E5D1b7a916Cc41fCbC7a3428ca9692A1EB591f0] = 15;
-      withdrawal_allowed[0x6E5D1b7a916Cc41fCbC7a3428ca9692A1EB591f0] = true;
-
-      allocated_tokens[0x486C4898f36785Fcd671D3589C963dDA87235831] = 20;
-      withdrawal_allowed[0x486C4898f36785Fcd671D3589C963dDA87235831] = true;
-
-      rate_per_second = gradual_amount / (timelock_end - cliff_time);
-    }
-
-    // ADMIN FUNCtIONS
-
-    // owner can blacklist an address
-    function blacklist(address _address) onlyOwner public returns (bool) {
-      withdrawal_allowed[_address] = false;
+  // sends tokens from contract to address
+  function withdraw() public returns (bool) {
+    uint256 availableTokens = withdrawTokenCeiling(msg.sender);
+    if (withdrawal_allowed[msg.sender] && availableTokens > 0) {
+      withdrawn_tokens[msg.sender] = withdrawn_tokens[msg.sender].add(availableTokens);
+      // todo - do the transfer
       return true;
+    } else {
+      return false;
     }
-
-    // owner can whitelist an address
-    function whitelist(address _address) onlyOwner public returns (bool) {
-      withdrawal_allowed[_address] = true;
-      return true;
-    }
-
-    // WITHDRAW FUNCTIONS
-
-    // this helper returns the max percentage that can be withdrawn at this point in time. Does not consider any amount already withdrawn (that will be later in withdraw)
-    // return is a multiplier between 0 and 1.
-    function withdrawPercentageCeiling() private view returns (uint256) {
-      if (now < cliff_time) {
-        return 0;
-      } else if (now > cliff_time && now < timelock_end) {
-        return (cliff_amount + (rate_per_second * (now - cliff_time)));
-      } else if (now > timelock_end) {
-        return 1;
-      }
-    }
-
-    // hlper returns max withdrawal for an address
-    function withdrawTokenCeiling(address _address) private view returns (uint256) {
-      return ((withdrawPercentageCeiling() * allocated_tokens[_address]) - withdrawn_tokens[_address]);
-    }
-
-    // sends tokens from contract to address
-    function withdraw(uint256 _amount) public returns (bool) {
-      if (withdrawal_allowed[msg.sender] && (_amount <= withdrawTokenCeiling(msg.sender))) {
-        withdrawn_tokens[msg.sender] += _amount;
-        // do the transfer
-      } else {
-        return false;
-      }
-    }
+  }
 
 }
