@@ -32,16 +32,31 @@ contract MeshCrowdsale is CappedCrowdsale, Ownable {
    * @dev minimumContribution keeps track of what should be the minimum contribution required per address
    */
   uint256 public minimumContribution;
+
+  /**
+   * @dev variable to keep track of beneficiaries for which we need to mint the tokens directly
+   */
+  address[] public beneficiaries;
+
+  /**
+   * @dev variable to keep track of amount og tokens to mint for beneficiaries
+   */
+  uint256[] public beneficiaryAmounts;
+
   /*---------------------------------constructor---------------------------------*/
 
   /**
    * @dev Constructor for MeshCrowdsale contract
    */
-  function MeshCrowdsale(uint256 _startTime, uint256 _endTime, uint256 _rate, address _wallet, uint256 _cap, uint256 _minimumContribution, MeshToken _token)
+  function MeshCrowdsale(uint256 _startTime, uint256 _endTime, uint256 _rate, address _wallet, uint256 _cap, uint256 _minimumContribution, MeshToken _token, address[] _beneficiaries, uint256[] _beneficiaryAmounts)
   CappedCrowdsale(_cap)
   Crowdsale(_startTime, _endTime, _rate, _wallet, _token)
   public
   {
+    require(_beneficiaries.length == _beneficiaryAmounts.length);
+    beneficiaries = _beneficiaries;
+    beneficiaryAmounts = _beneficiaryAmounts;
+
     minimumContribution = _minimumContribution;
   }
 
@@ -120,6 +135,25 @@ contract MeshCrowdsale is CappedCrowdsale, Ownable {
     minimumContribution = _minimumContribution;
     return true;
   }
+
+  /*
+   * @dev Function to perform minting to predefined beneficiaries once crowdsale has started
+   * can be called by anyone as the outcome is fixed and does not depend on who is calling the method
+   * can be called multiple times but will only do the minting once per address
+   */
+  function mintPredefinedTokens() external returns (bool) {
+    // make sure the crowdsale has started
+    require(weiRaised > 0);
+
+    // loop through the list and call mint on token directly
+    // this minting does not affect any crowdsale numbers
+    for (uint i = 0; i < beneficiaries.length; i++) {
+      if (token.balanceOf(beneficiaries[i]) == 0) {
+        token.mint(beneficiaries[i], beneficiaryAmounts[i]);
+      }
+    }
+  }
+
   /*---------------------------------proxy methods for token when owned by contract---------------------------------*/
   /**
    * @dev Allows the current owner to transfer token control back to contract owner

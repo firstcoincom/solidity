@@ -10,6 +10,8 @@ contract('MeshCrowdsale', (accounts) => {
   const contributionLimit = 100;
   const minimumContribution = 10;
   const contributionAmount = contributionLimit / 2;
+  const beneficiaries = [accounts[2], accounts[3]];
+  const beneficiaryAmounts = [ 100, 200 ];
 
   const getCurrentTime = () => Math.floor(Date.now() / 1000);
 
@@ -24,7 +26,7 @@ contract('MeshCrowdsale', (accounts) => {
       const deployCrowdsale = () => {
         startTime = startTime || getCurrentTime();
         endTime = endTime || (startTime + 10000000);
-        return MeshCrowdsale.new(startTime, endTime, rate, wallet, crowdsaleCap, minimumContribution, meshToken.address);
+        return MeshCrowdsale.new(startTime, endTime, rate, wallet, crowdsaleCap, minimumContribution, meshToken.address, beneficiaries, beneficiaryAmounts);
       };
       // when deploying contract, we are setting startTime equal to current time
       // occassionally time second flips before next deploy, therefore setting out start time in past
@@ -681,6 +683,133 @@ contract('MeshCrowdsale', (accounts) => {
               return meshCrowdsale.sendTransaction({ value: minimumContribution - 1, from: addr1}).then(() => {
                 return meshToken.balanceOf(addr1).then(balance => {
                   assert.equal(rate * minimumContribution * 2, balance, "Token balance should be positive now");
+                });
+              });
+            });
+          });
+        });
+      });
+    });
+  });
+
+  describe('mintPredefinedTokens', () => {
+    const beneficiaries = [accounts[2], accounts[3]];
+    const beneficiaryAmounts = [ 100, 200 ];
+
+    /**
+     * Scenario:
+     * 1. Crowdsale contract is deployed
+     * 2. Anyone trying to called mintPredefinedTokens method without any wei being raised.
+     * 3. The function should do nothing in that case.
+     */
+    it('should do nothing when no contribution has been made to crowdsale', () => {
+      return getContracts().then(({ meshCrowdsale, meshToken }) => {
+        return meshCrowdsale.mintPredefinedTokens().then(() => {
+          return Promise.all([
+            meshToken.balanceOf(beneficiaries[0]),
+            meshToken.balanceOf(beneficiaries[1]),
+            meshToken.totalSupply(),
+          ]).then(results => {
+            assert.equal(results[0], 0, "beneficiary 0 should not have any tokens");
+            assert.equal(results[1], 0, "beneficiary 1 should not have any tokens");
+            assert.equal(results[2], 0, "totalSupply should be 0");
+          });
+        });
+      });
+    });
+
+    /**
+     * Scenario:
+     * 1. Crowdsale contract is deployed
+     * 2. Wait for the crowdsale to start and 1st contribution to show up
+     * 3. Anyone calling mintPredefinedTokens after 1st contribution
+     * 4. Tokens should be minted to the beneficiary addresses now.
+     */
+    it('should mint tokens when contribution has been made', () => {
+      return getContracts().then(({ meshCrowdsale, meshToken }) => {
+        return meshCrowdsale.setWhitelistingAgent(addr1, true).then(() => {
+          return meshCrowdsale.setLimit([addr1], crowdsaleCap, { from: addr1 }).then(() => {
+            return meshCrowdsale.sendTransaction({ value: minimumContribution, from: addr1}).then(() => {
+              return meshCrowdsale.mintPredefinedTokens().then(() => {
+                return Promise.all([
+                  meshToken.balanceOf(beneficiaries[0]),
+                  meshToken.balanceOf(beneficiaries[1]),
+                  meshToken.totalSupply(),
+                ]).then(results => {
+                  assert.equal(results[0], beneficiaryAmounts[0], "beneficiary 0 should have tokens now");
+                  assert.equal(results[1], beneficiaryAmounts[1], "beneficiary 1 should have tokens now");
+                });
+              });
+            });
+          });
+        });
+      });
+    });
+
+    /**
+     * Scenario:
+     * 1. Crowdsale contract is deployed
+     * 2. Wait for the crowdsale to start and 1st contribution to show up
+     * 3. mintPredefinedTokens called multiple times on the crowdsale
+     * 4. Tokens should be minted only once.
+     */
+    it('should only mint tokens once when contribution has been made even if called multiple times', () => {
+      return getContracts().then(({ meshCrowdsale, meshToken }) => {
+        return meshCrowdsale.setWhitelistingAgent(addr1, true).then(() => {
+          return meshCrowdsale.setLimit([addr1], crowdsaleCap, { from: addr1 }).then(() => {
+            return meshCrowdsale.sendTransaction({ value: minimumContribution, from: addr1}).then(() => {
+              return Promise.all([
+                meshCrowdsale.mintPredefinedTokens(),
+                meshCrowdsale.mintPredefinedTokens(),
+                meshCrowdsale.mintPredefinedTokens(),
+                meshCrowdsale.mintPredefinedTokens(),
+                meshCrowdsale.mintPredefinedTokens(),
+                meshCrowdsale.mintPredefinedTokens(),
+                meshCrowdsale.mintPredefinedTokens(),
+                meshCrowdsale.mintPredefinedTokens(),
+              ]).then(() => {
+                return Promise.all([
+                  meshToken.balanceOf(beneficiaries[0]),
+                  meshToken.balanceOf(beneficiaries[1]),
+                  meshToken.totalSupply(),
+                ]).then(results => {
+                  assert.equal(results[0], beneficiaryAmounts[0], "beneficiary 0 should have tokens now");
+                  assert.equal(results[1], beneficiaryAmounts[1], "beneficiary 1 should have tokens now");
+                });
+              });
+            });
+          });
+        });
+      });
+    });
+
+    /**
+     * Scenario:
+     * 1. Crowdsale contract is deployed
+     * 2. Wait for the crowdsale to start and 1st contribution to show up
+     * 3. mintPredefinedTokens called on the crowdsale
+     * 4. Tokens should only be minted for beneficiaries that have no tokens assigned to them by now
+     */
+    it('should only mint for addresses with 0 tokens', () => {
+      return getContracts().then(({ meshCrowdsale, meshToken }) => {
+        return meshCrowdsale.setWhitelistingAgent(addr1, true).then(() => {
+          return meshCrowdsale.setLimit([beneficiaries[0]], crowdsaleCap, { from: addr1 }).then(() => {
+            return meshCrowdsale.sendTransaction({ value: minimumContribution, from: beneficiaries[0]}).then(() => {
+              return Promise.all([
+                meshToken.balanceOf(beneficiaries[0]),
+                meshToken.balanceOf(beneficiaries[1]),
+              ]).then(balances => {
+                assert.equal(balances[0], rate * minimumContribution, "beneficiary 0 should have tokens now");
+                assert.equal(balances[1], 0, "beneficiary 1 should not have any tokens yet");
+                return meshCrowdsale.mintPredefinedTokens().then(() => {
+                  return Promise.all([
+                    meshToken.balanceOf(beneficiaries[0]),
+                    meshToken.balanceOf(beneficiaries[1]),
+                    meshToken.totalSupply(),
+                  ]).then(results => {
+                    assert.equal(results[0], rate * minimumContribution, "beneficiary 0 should still have same amount of tokens");
+                    assert.equal(results[1], beneficiaryAmounts[1], "beneficiary 1 should have tokens now");
+                  });
                 });
               });
             });
