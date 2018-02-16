@@ -25,7 +25,7 @@ var CrowdsaleInstance = CrowdsaleContract.new(
   {
     data: crowdsaleBytecode,
     from: addressConfig.ownerAddress,
-    gas: gasConfig.deployGas
+    gas: gasConfig.deployGas,
   }
 );
 
