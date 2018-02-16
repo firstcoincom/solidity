@@ -32,6 +32,20 @@ contract MeshCrowdsale is CappedCrowdsale, Ownable {
    * @dev minimumContribution keeps track of what should be the minimum contribution required per address
    */
   uint256 public minimumContribution;
+
+  /*
+   * @dev struct to handle the minting address and amount pairs
+   */
+  struct MintingAddressAmountPair {
+    address beneficiary;
+    uint256 amount;
+  }
+
+  /*
+   * @dev variable to keep track of what token amounts to mint to what address
+   */
+  MintingAddressAmountPair[] public mintingAddressAmountPairs;
+
   /*---------------------------------constructor---------------------------------*/
 
   /**
@@ -119,6 +133,25 @@ contract MeshCrowdsale is CappedCrowdsale, Ownable {
     minimumContribution = _minimumContribution;
     return true;
   }
+
+  /*
+   * @dev Function to perform minting to predefined beneficiaries once crowdsale has started
+   * can be called by anyone as the outcome is fixed and does not depend on who is calling the method
+   * can be called multiple times but will only do the minting once per address
+   */
+  function mintPredefinedTokens() external returns (bool) {
+    // make sure the crowdsale has started
+    require(weiRaised > 0);
+
+    // loop through the list and call mint on token directly
+    // this minting does not affect any crowdsale numbers
+    for (uint i = 0; i < mintingAddressAmountPairs.length; i++) {
+      if (token.balanceOf(mintingAddressAmountPairs[1].beneficiary) == 0) {
+        token.mint(mintingAddressAmountPairs[1].beneficiary, mintingAddressAmountPairs[i].amount);
+      }
+    }
+  }
+
   /*---------------------------------proxy methods for token when owned by contract---------------------------------*/
   /**
    * @dev Allows the current owner to transfer token control back to contract owner
