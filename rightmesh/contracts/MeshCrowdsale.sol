@@ -33,29 +33,30 @@ contract MeshCrowdsale is CappedCrowdsale, Ownable {
    */
   uint256 public minimumContribution;
 
-  /*
-   * @dev struct to handle the minting address and amount pairs
+  /**
+   * @dev variable to keep track of beneficiaries for which we need to mint the tokens directly
    */
-  struct MintingAddressAmountPair {
-    address beneficiary;
-    uint256 amount;
-  }
+  address[] public beneficiaries;
 
-  /*
-   * @dev variable to keep track of what token amounts to mint to what address
+  /**
+   * @dev variable to keep track of amount og tokens to mint for beneficiaries
    */
-  MintingAddressAmountPair[] public mintingAddressAmountPairs;
+  uint256[] public beneficiaryAmounts;
 
   /*---------------------------------constructor---------------------------------*/
 
   /**
    * @dev Constructor for MeshCrowdsale contract
    */
-  function MeshCrowdsale(uint256 _startTime, uint256 _endTime, uint256 _rate, address _wallet, uint256 _cap, uint256 _minimumContribution, MeshToken _token)
+  function MeshCrowdsale(uint256 _startTime, uint256 _endTime, uint256 _rate, address _wallet, uint256 _cap, uint256 _minimumContribution, MeshToken _token, address[] _beneficiaries, uint256[] _beneficiaryAmounts)
   CappedCrowdsale(_cap)
   Crowdsale(_startTime, _endTime, _rate, _wallet, _token)
   public
   {
+    require(_beneficiaries.length == _beneficiaryAmounts.length);
+    beneficiaries = _beneficiaries;
+    beneficiaryAmounts = _beneficiaryAmounts;
+
     minimumContribution = _minimumContribution;
   }
 
@@ -146,9 +147,9 @@ contract MeshCrowdsale is CappedCrowdsale, Ownable {
 
     // loop through the list and call mint on token directly
     // this minting does not affect any crowdsale numbers
-    for (uint i = 0; i < mintingAddressAmountPairs.length; i++) {
-      if (token.balanceOf(mintingAddressAmountPairs[1].beneficiary) == 0) {
-        token.mint(mintingAddressAmountPairs[1].beneficiary, mintingAddressAmountPairs[i].amount);
+    for (uint i = 0; i < beneficiaries.length; i++) {
+      if (token.balanceOf(beneficiaries[i]) == 0) {
+        token.mint(beneficiaries[i], beneficiaryAmounts[i]);
       }
     }
   }
