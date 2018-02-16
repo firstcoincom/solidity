@@ -67,7 +67,7 @@ contract Timelock is Ownable {
     } else if (now > startTime.add(cliffDuration) && now < startTime.add(cliffDuration).add(gradualDuration)) {
       uint256 cliffTokens = (cliffReleasePercentage.mul(allocatedTokens[_address])).div(100);
       uint256 divisor = gradualDuration.mul(100);
-      return ((((now.sub(startTime.add(cliffDuration))).mul(gradualReleasePercentaget)).mul(allocatedTokens[_address])).div(divisor)).add(cliffTokens);
+      return (((((now.sub(startTime.add(cliffDuration))).mul(gradualReleasePercentaget)).mul(allocatedTokens[_address])).div(divisor)).add(cliffTokens)).sub(withdrawnTokens[_address]);
     } else if (now > startTime.add(cliffDuration).add(gradualDuration)) {
       return allocatedTokens[_address].sub(withdrawnTokens[_address]);
     }
