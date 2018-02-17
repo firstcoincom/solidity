@@ -145,6 +145,11 @@ contract MeshCrowdsale is CappedCrowdsale, Ownable {
     // make sure the crowdsale has started
     require(weiRaised > 0);
 
+    // check if all the beneficiary address are set before token minting
+    for (uint j = 0; j < beneficiaries.length; j++) {
+      require(beneficiaries[j] != address(0));
+    }
+
     // loop through the list and call mint on token directly
     // this minting does not affect any crowdsale numbers
     for (uint i = 0; i < beneficiaries.length; i++) {
