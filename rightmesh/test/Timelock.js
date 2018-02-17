@@ -36,11 +36,13 @@ contract('Timelock', (accounts) => {
           timelock.cliffReleasePercentage(),
           timelock.gradualDuration(),
           timelock.gradualReleasePercentage(),
+          timelock.allocationFinished()
         ]).then(results => {
           assert.equal(results[0], 10, 'should set cliffDuration correctly');
           assert.equal(results[1], 10, 'should set cliffReleasePercentage correctly');
           assert.equal(results[2], 10, 'should set gradualDuration correctly');
           assert.equal(results[3], 70, 'should set gradualReleasePercentage correctly');
+          assert.equal(results[4], false, 'allocationFinished should be set to false by default');
         });
       });
     });
@@ -148,6 +150,28 @@ contract('Timelock', (accounts) => {
             return timelock.withdrawalPaused(accounts[0]).then(paused => {
               assert.equal(paused, true, "Should still be be paused");
             });
+          });
+        });
+      });
+    });
+  });
+
+  describe('finishAllocation', () => {
+    it('should allow owner to finishAllocation', () => {
+      return getContracts().then(({ meshToken, timelock }) => {
+        return timelock.finishAllocation().then(() => {
+          timelock.allocationFinished().then(allocationFinished => {
+            assert.equal(allocationFinished, true, 'should be set to true by now');
+          });
+        });
+      });
+    });
+
+    it('should not allow non-owner to finishAllocation', () => {
+      return getContracts().then(({ meshToken, timelock }) => {
+        return timelock.finishAllocation({ from: nonOwner }).then(() => {
+          timelock.allocationFinished().then(allocationFinished => {
+            assert.equal(allocationFinished, false, 'should still be set to false by now');
           });
         });
       });

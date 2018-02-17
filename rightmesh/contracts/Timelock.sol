@@ -23,7 +23,7 @@ contract Timelock is Ownable {
   uint256 public gradualDuration; // number of seconds from cliff to residue, over this period tokens become avialable gradually
   uint256 public gradualReleasePercentage; // a percentage that becomes avilable over the gradual release perios expressed as a number between 0 and 100
 
-  //todo make this a struct
+  bool public allocationFinished;
   mapping (address => uint256) public allocatedTokens;
   mapping (address => uint256) public withdrawnTokens;
   mapping (address => bool) public withdrawalPaused;
@@ -35,20 +35,27 @@ contract Timelock is Ownable {
     assert(_cliffReleasePercent.add(_gradualReleasePercentage) <= 100);
     assert(_startTime > now);
 
+    allocationFinished = false;
+
     token = _token;
     startTime = _startTime;
     cliffDuration = _cliffDuration;
     cliffReleasePercentage = _cliffReleasePercent;
     gradualDuration = _gradualDuration;
     gradualReleasePercentage = _gradualReleasePercentage;
+  }
 
-    // allocatedTokens[0x14723a09acff6d2a60dcdf7aa4aff308fddc160c] = 10 ether;
+  function allocateTokens(address _address, uint256 _amount) onlyOwner public returns (bool) {
+    require(!allocationFinished);
 
-    allocatedTokens[0xaDe4A31E4FeC4a652B7A11A79a019bACf53124a0] = 10 ether;
+    allocatedTokens[_address] = _amount;
+    return true;
+  }
 
-    allocatedTokens[0x6E5D1b7a916Cc41fCbC7a3428ca9692A1EB591f0] = 15 szabo;
+  function finishAllocation() onlyOwner public returns (bool) {
+    allocationFinished = true;
 
-    allocatedTokens[0x486C4898f36785Fcd671D3589C963dDA87235831] = 20 finney;
+    return true;
   }
 
   function pauseWithdrawal(address _address) onlyOwner public returns (bool) {
