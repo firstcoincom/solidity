@@ -32,7 +32,7 @@ contract Timelock is Ownable {
   function Timelock(ERC20Basic _token, uint256 _startTime, uint256 _cliffDuration, uint256 _cliffReleasePercent, uint256 _gradualDuration, uint256 _gradualReleasePercentage) public {
 
     // sanity checks
-    assert(_cliffReleasePercent.add(gradualReleasePercentage) <= 100);
+    assert(_cliffReleasePercent.add(_gradualReleasePercentage) <= 100);
     assert(_startTime > now);
 
     token = _token;
