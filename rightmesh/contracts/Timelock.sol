@@ -21,18 +21,18 @@ contract Timelock is Ownable {
   uint256 public cliffDuration; // number of seconds from startTime to cliff
   uint256 public cliffReleasePercentage; // a percentage that becomes available at the cliff, expressed as a number between 0 and 100
   uint256 public gradualDuration; // number of seconds from cliff to residue, over this period tokens become avialable gradually
-  uint256 public gradualReleasePercentaget; // a percentage that becomes avilable over the gradual release perios expressed as a number between 0 and 100
+  uint256 public gradualReleasePercentage; // a percentage that becomes avilable over the gradual release perios expressed as a number between 0 and 100
 
   //todo make this a struct
   mapping (address => uint256) public allocatedTokens;
   mapping (address => uint256) public withdrawnTokens;
-  mapping (address => bool) public withdrawalBlocked;
+  mapping (address => bool) public withdrawalPaused;
 
   // constructor initializes fields and performs some sanity checks on provided values
   function Timelock(ERC20Basic _token, uint256 _startTime, uint256 _cliffDuration, uint256 _cliffReleasePercent, uint256 _gradualDuration, uint256 _gradualReleasePercentage) public {
 
     // sanity checks
-    assert(_cliffReleasePercent.add(gradualReleasePercentaget) <= 100);
+    assert(_cliffReleasePercent.add(gradualReleasePercentage) <= 100);
     assert(_startTime > now);
 
     token = _token;
@@ -40,7 +40,7 @@ contract Timelock is Ownable {
     cliffDuration = _cliffDuration;
     cliffReleasePercentage = _cliffReleasePercent;
     gradualDuration = _gradualDuration;
-    gradualReleasePercentaget = _gradualReleasePercentage;
+    gradualReleasePercentage = _gradualReleasePercentage;
 
     // allocatedTokens[0x14723a09acff6d2a60dcdf7aa4aff308fddc160c] = 10 ether;
 
@@ -52,12 +52,12 @@ contract Timelock is Ownable {
   }
 
   function pauseWithdrawal(address _address) onlyOwner public returns (bool) {
-    withdrawalBlocked[_address] = true;
+    withdrawalPaused[_address] = true;
     return true;
   }
 
   function unpauseWithdrawal(address _address) onlyOwner public returns (bool) {
-    withdrawalBlocked[_address] = false;
+    withdrawalPaused[_address] = false;
     return true;
   }
 
@@ -67,7 +67,7 @@ contract Timelock is Ownable {
     } else if (now > startTime.add(cliffDuration) && now < startTime.add(cliffDuration).add(gradualDuration)) {
       uint256 cliffTokens = (cliffReleasePercentage.mul(allocatedTokens[_address])).div(100);
       uint256 divisor = gradualDuration.mul(100);
-      return (((((now.sub(startTime.add(cliffDuration))).mul(gradualReleasePercentaget)).mul(allocatedTokens[_address])).div(divisor)).add(cliffTokens)).sub(withdrawnTokens[_address]);
+      return (((((now.sub(startTime.add(cliffDuration))).mul(gradualReleasePercentage)).mul(allocatedTokens[_address])).div(divisor)).add(cliffTokens)).sub(withdrawnTokens[_address]);
     } else if (now > startTime.add(cliffDuration).add(gradualDuration)) {
       return allocatedTokens[_address].sub(withdrawnTokens[_address]);
     }
@@ -75,7 +75,7 @@ contract Timelock is Ownable {
 
   function withdraw() public returns (bool) {
     uint256 availableTokens = availableForWithdrawal(msg.sender);
-    require(!withdrawalBlocked[msg.sender] && availableTokens > 0);
+    require(!withdrawalPaused[msg.sender] && availableTokens > 0);
     withdrawnTokens[msg.sender] = withdrawnTokens[msg.sender].add(availableTokens);
     token.safeTransfer(msg.sender, availableTokens);
     return true;
