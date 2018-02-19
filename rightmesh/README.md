@@ -85,6 +85,7 @@ npm run compile
   - `build/contracts/MeshCrowdsale.json` - truffle build that can be deployed using truffle migrations
 
 ### Deploying using geth node
+#### Geth Setup
 1. Install geth ethereum node.
 2. Get access to the machine which hosts the geth node.
 3. Attach to geth javascript console.
@@ -111,45 +112,74 @@ $ sudo geth attach /media/geth/geth.ipc
 ```
 $ vim config/address-config.js
 ```
-9. Deploy the token contract and verify the code on ether scan. After the contract is deployed, fill the token
+
+#### Deploying and interacting with contracts
+
+##### Phase 1 (setup before crowdsale)
+1. Deploy the token contract and verify the code on ether scan. After the contract is deployed, fill the token
 contract address in the address config file.
 ```
 $ node 1_deploy_token.js
 ```
-10. Deploy the crowdsale contract and verify the code on ether scan. After the contract is deployed, fill the crowdsale contract address in the address-config.js file. The parameters of crowdsale contract can be configured in crowdsale-config.js file.
+2. Deploy timelock contract and verify the code on ether scan. After the contract is deployed, fill the timelock contract addtress in the address config file.
 ```
-$ node 2_deploy_crowdsale.js
+$ node 2_deploy_timelock.js
 ```
-11. Transfer the token contract ownership to crowdsale contract. So the crowdsale contract will be able to mint tokens.
+3. Update `allocation-config.js` with correct addresses and amounts and then call the timelock contract to update the same within the contract.
 ```
-$ node 3_token_ownership_to_crowdsale.js
+$ node 3_allocate_tokens.js
 ```
-12. Finalize and set both rate and minimum contribution limit
+4. Once the allocation is done, call the timelock contract to finish allocation. Note, once this is done allocations cannot be changed after that.
 ```
-$ node 4_set_rate.js
-$ node 4_set_minimum_contribution.js
+node 4_finish_allocation.js
 ```
-13. Set up a whitelist agent, which can whitelist contributors to get into the crowsale. The whitelist agent's address is configured in address-config.js.
+> Repeat steps 2-4 if you need multiple vesting contracts.
+
+##### Phase 2 (crowdsale setup)
+1. Deploy the crowdsale contract and verify the code on ether scan. After the contract is deployed, fill the crowdsale contract address in the address-config.js file. The parameters of crowdsale contract can be configured in crowdsale-config.js file.
 ```
-$ node 5_add_whitelisting_agent.js
+$ node 5_deploy_crowdsale.js
 ```
-14. Whitelist agent now can white list contributors. Only whitelisted contributors can participate into the ico. The limit and contributor's address can be configured in whitelist-config.js.
+2. Transfer the token contract ownership to crowdsale contract. So the crowdsale contract will be able to mint tokens.
 ```
-$ node 6_whitelist.js
+$ node 6_token_ownership_to_crowdsale.js
 ```
-15. Once the public crowsale is done. The crowdsale contract will transfer the ownership of token contract back to the owner.
+3. Finalize ETH to token rate and update the contract.
 ```
-$ node 7_token_ownership_to_owner.js
+$ node 7_set_rate.js
 ```
-16. The next step is for the owner to mint tokens for pre-allocated tokens.
+4. Finalize minimum contribution and update the contract.
 ```
-$ node 8_mint_tokens.js
+$ node 8_set_minimum_contribution.js
 ```
-17. Enable individual address to allow transfers to distribute tokens to ECA's and pre-contributors.
+5. Set up a whitelist agent, which can whitelist contributors to get into the crowsale. The whitelist agent's address is configured in address-config.js.
 ```
-$ node 9_add_transfer_exceptions.js
+$ node 9_add_whitelisting_agent.js
 ```
-18. Unpause the token contract to enable token transfers on the ethereum mainet.
+6. Whitelist agent now can white list contributors. Only whitelisted contributors can participate into the ico. The limit and contributor's address can be configured in whitelist-config.js.
 ```
-$ node 10_unpause_token.js
+$ node 10_whitelist.js
+```
+7. Once crowdsale has started, you can now call the crowdsale to mint predefined tokens.
+```
+$ node 11_mint_predefined_tokens.js
+```
+8. Once the public crowsale is done. The crowdsale contract will transfer the ownership of token contract back to the owner.
+```
+$ node 12_token_ownership_to_owner.js
+```
+> Repeat Phase 2 with a different rate if needed.
+
+##### Phase 3 (after crowdsale)
+1. The next step is for the owner to mint tokens for pre-allocated tokens.
+```
+$ node 13_mint_tokens.js
+```
+2. Enable individual address to allow transfers to distribute tokens to ECA's and pre-contributors.
+```
+$ node 14_add_transfer_exception.js
+```
+3. Unpause the token contract to enable token transfers on the ethereum mainet.
+```
+$ node 15_unpause_token.js
 ```
