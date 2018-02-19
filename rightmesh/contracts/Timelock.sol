@@ -39,12 +39,12 @@ contract Timelock is Ownable {
   /**
    * @dev number of seconds from cliff to residue, over this period tokens become avialable gradually
    */
-  uint256 public gradualDuration;
+  uint256 public slopeDuration;
 
   /**
    * @dev a percentage that becomes avilable over the gradual release period expressed as a number between 0 and 100
    */
-  uint256 public gradualReleasePercentage;
+  uint256 public slopeReleasePercentage;
 
   /**
    * @dev boolean indicating if owner has finished allocation.
@@ -72,13 +72,13 @@ contract Timelock is Ownable {
    * @param _startTime timestamp indicating when the unlocking of tokens start.
    * @param _cliffDuration number of seconds before any tokens are unlocked.
    * @param _cliffReleasePercent percentage of tokens that become available at the cliff time.
-   * @param _gradualDuration number of seconds for gradual release of Tokens.
-   * @param _gradualReleasePercentage percentage of tokens that are released gradually.
+   * @param _slopeDuration number of seconds for gradual release of Tokens.
+   * @param _slopeReleasePercentage percentage of tokens that are released gradually.
    */
-  function Timelock(ERC20Basic _token, uint256 _startTime, uint256 _cliffDuration, uint256 _cliffReleasePercent, uint256 _gradualDuration, uint256 _gradualReleasePercentage) public {
+  function Timelock(ERC20Basic _token, uint256 _startTime, uint256 _cliffDuration, uint256 _cliffReleasePercent, uint256 _slopeDuration, uint256 _slopeReleasePercentage) public {
 
     // sanity checks
-    require(_cliffReleasePercent.add(_gradualReleasePercentage) <= 100);
+    require(_cliffReleasePercent.add(_slopeReleasePercentage) <= 100);
     require(_startTime > now);
     require(_token != address(0));
 
@@ -88,8 +88,8 @@ contract Timelock is Ownable {
     startTime = _startTime;
     cliffDuration = _cliffDuration;
     cliffReleasePercentage = _cliffReleasePercent;
-    gradualDuration = _gradualDuration;
-    gradualReleasePercentage = _gradualReleasePercentage;
+    slopeDuration = _slopeDuration;
+    slopeReleasePercentage = _slopeReleasePercentage;
   }
 
   /**
@@ -139,15 +139,15 @@ contract Timelock is Ownable {
    * @return uint256 number indicating the number of tokens available for withdrawl.
    */
   function availableForWithdrawal(address _address) public view returns (uint256) {
-    uint256 timelockEndTime = startTime.add(cliffDuration).add(gradualDuration);
+    uint256 timelockEndTime = startTime.add(cliffDuration).add(slopeDuration);
 
     if (now < startTime.add(cliffDuration)) {
       return 0;
     } else if (now < timelockEndTime) {
       uint256 cliffTokens = (cliffReleasePercentage.mul(allocatedTokens[_address])).div(100);
-      uint256 slopeTokens = (allocatedTokens[_address].mul(gradualReleasePercentage)).div(100);
+      uint256 slopeTokens = (allocatedTokens[_address].mul(slopeReleasePercentage)).div(100);
       uint256 timeAtSlope = now.sub(startTime.add(cliffDuration));
-      uint256 slopeTokensByNow = (slopeTokens.mul(timeAtSlope)).div(gradualDuration);
+      uint256 slopeTokensByNow = (slopeTokens.mul(timeAtSlope)).div(slopeDuration);
 
       return (cliffTokens.add(slopeTokensByNow)).sub(withdrawnTokens[_address]);
     } else {

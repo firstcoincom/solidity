@@ -7,15 +7,15 @@ contract('Timelock', (accounts) => {
 
   const getCurrentTime = () => Math.floor(Date.now() / 1000);
 
-  const getContracts = (startTime, cliffDuration, cliffReleasePercentage, gradualDuration, gradualReleasePercentage) => {
+  const getContracts = (startTime, cliffDuration, cliffReleasePercentage, slopeDuration, slopeReleasePercentage) => {
     startTime = startTime || getCurrentTime() + 2;
     cliffDuration = cliffDuration || 10;
     cliffReleasePercentage = cliffReleasePercentage || 10;
-    gradualDuration = gradualDuration || 10;
-    gradualReleasePercentage = gradualReleasePercentage || 70;
+    slopeDuration = slopeDuration || 10;
+    slopeReleasePercentage = slopeReleasePercentage || 70;
 
     return MeshToken.new().then(meshToken => {
-      return Timelock.new(meshToken.address, startTime, cliffDuration, cliffReleasePercentage, gradualDuration, gradualReleasePercentage).then(timelock => {
+      return Timelock.new(meshToken.address, startTime, cliffDuration, cliffReleasePercentage, slopeDuration, slopeReleasePercentage).then(timelock => {
         return Promise.all([
           meshToken.unpause(),
           meshToken.mint(timelock.address, 1000000)
@@ -39,14 +39,14 @@ contract('Timelock', (accounts) => {
         Promise.all([
           timelock.cliffDuration(),
           timelock.cliffReleasePercentage(),
-          timelock.gradualDuration(),
-          timelock.gradualReleasePercentage(),
+          timelock.slopeDuration(),
+          timelock.slopeReleasePercentage(),
           timelock.allocationFinished()
         ]).then(results => {
           assert.equal(results[0], 10, 'should set cliffDuration correctly');
           assert.equal(results[1], 10, 'should set cliffReleasePercentage correctly');
-          assert.equal(results[2], 10, 'should set gradualDuration correctly');
-          assert.equal(results[3], 70, 'should set gradualReleasePercentage correctly');
+          assert.equal(results[2], 10, 'should set slopeDuration correctly');
+          assert.equal(results[3], 70, 'should set slopeReleasePercentage correctly');
           assert.equal(results[4], false, 'allocationFinished should be set to false by default');
         });
       });
@@ -68,7 +68,7 @@ contract('Timelock', (accounts) => {
      * Scenario:
      * 1. Constructor should validate the total percentage of amount being released to be less than or equal to 100
      */
-    it('should validate cliffReleasePercentage + gradualReleasePercentage to be less than 100', () => {
+    it('should validate cliffReleasePercentage + slopeReleasePercentage to be less than 100', () => {
       return getContracts(null, null, 60, null, 60).then(({ timelock, meshToken }) => {
         throw 'validation not working correctly'
       }).catch(err => {
@@ -313,13 +313,13 @@ contract('Timelock', (accounts) => {
      * 2. Anyone trying to see available tokens for withdrawal after the locking period is finished.
      * 3. All tokens should be available for withdrawal.
      */
-    it('should be equal to maximum after cliffDuration + gradualDuration is reached', () => {
+    it('should be equal to maximum after cliffDuration + slopeDuration is reached', () => {
       const startDelay = 2;
       const startTime = getCurrentTime() + startDelay;
       const cliffDuration = 1;
-      const gradualDuration = 1;
+      const slopeDuration = 1;
 
-      return getContracts(startTime, cliffDuration, null, gradualDuration, null).then(({ meshToken, timelock }) => {
+      return getContracts(startTime, cliffDuration, null, slopeDuration, null).then(({ meshToken, timelock }) => {
         return timelock.allocateTokens(nonOwner, 100).then(() => {
           return new Promise(resolve => {
             setTimeout(() => {
@@ -327,7 +327,7 @@ contract('Timelock', (accounts) => {
                 assert.equal(amount, 100, 'Entire amount should be available for withdrawal by the end of vesting period');
                 resolve('');
               });
-            }, (startDelay + cliffDuration + gradualDuration + 1) * 1000);
+            }, (startDelay + cliffDuration + slopeDuration + 1) * 1000);
           });
         });
       });
@@ -339,16 +339,16 @@ contract('Timelock', (accounts) => {
      * 2. Anyone trying to see available tokens for withdrawal between cliffDuration and timelock ending
      * 3. Atleast cliffReleasePercentage of allocatedTokens amount of tokens should be available for withdrawal.
      */
-    it('should be greater than cliffReleasePercentage between cliffDuration and gradualDuration', () => {
+    it('should be greater than cliffReleasePercentage between cliffDuration and slopeDuration', () => {
       const startDelay = 2;
       const startTime = getCurrentTime() + startDelay;
       const cliffDuration = 1;
       const cliffReleasePercentage = 10;
-      const gradualDuration = 5;
-      const gradualReleasePercentage = 50;
+      const slopeDuration = 5;
+      const slopeReleasePercentage = 50;
       const allocatedTokens = 100;
 
-      return getContracts(startTime, cliffDuration, cliffReleasePercentage, gradualDuration, gradualReleasePercentage).then(({ meshToken, timelock}) => {
+      return getContracts(startTime, cliffDuration, cliffReleasePercentage, slopeDuration, slopeReleasePercentage).then(({ meshToken, timelock}) => {
         return timelock.allocateTokens(nonOwner, allocatedTokens).then(() => {
           return new Promise(resolve => {
             setTimeout(() => {
@@ -368,16 +368,16 @@ contract('Timelock', (accounts) => {
      * 2. Anyone trying to see available tokens for withdrawal between cliffDuration and timelock ending
      * 3. Atmax allocatedTokens amount of tokens should be available for withdrawal.
      */
-    it('should be less than total allocateTokens between cliffDuration and gradualDuration', () => {
+    it('should be less than total allocateTokens between cliffDuration and slopeDuration', () => {
       const startDelay = 2;
       const startTime = getCurrentTime() + startDelay;
       const cliffDuration = 1;
       const cliffReleasePercentage = 10;
-      const gradualDuration = 5;
-      const gradualReleasePercentage = 50;
+      const slopeDuration = 5;
+      const slopeReleasePercentage = 50;
       const allocatedTokens = 100;
 
-      return getContracts(startTime, cliffDuration, cliffReleasePercentage, gradualDuration, gradualReleasePercentage).then(({ meshToken, timelock}) => {
+      return getContracts(startTime, cliffDuration, cliffReleasePercentage, slopeDuration, slopeReleasePercentage).then(({ meshToken, timelock}) => {
         return timelock.allocateTokens(nonOwner, allocatedTokens).then(() => {
           return new Promise(resolve => {
             setTimeout(() => {
@@ -404,9 +404,9 @@ contract('Timelock', (accounts) => {
       const startDelay = 2;
       const startTime = getCurrentTime() + startDelay;
       const cliffDuration = 1;
-      const gradualDuration = 1;
+      const slopeDuration = 1;
 
-      return getContracts(startTime, cliffDuration, null, gradualDuration, null).then(({ meshToken, timelock }) => {
+      return getContracts(startTime, cliffDuration, null, slopeDuration, null).then(({ meshToken, timelock }) => {
         return timelock.allocateTokens(nonOwner, 100).then(() => {
           return timelock.withdraw({ from: nonOwner }).then(() => {
             return Promise.all([
@@ -433,9 +433,9 @@ contract('Timelock', (accounts) => {
       const startDelay = 2;
       const startTime = getCurrentTime() + startDelay;
       const cliffDuration = 1;
-      const gradualDuration = 1;
+      const slopeDuration = 1;
 
-      return getContracts(startTime, cliffDuration, null, gradualDuration, null).then(({ meshToken, timelock }) => {
+      return getContracts(startTime, cliffDuration, null, slopeDuration, null).then(({ meshToken, timelock }) => {
         return timelock.allocateTokens(nonOwner, 100).then(() => {
           return new Promise(resolve => {
             setTimeout(() => {
@@ -451,7 +451,7 @@ contract('Timelock', (accounts) => {
                   resolve('');
                 });
               });
-            }, (startDelay + cliffDuration + gradualDuration + 1) * 1000);
+            }, (startDelay + cliffDuration + slopeDuration + 1) * 1000);
           });
         });
       });
@@ -469,9 +469,9 @@ contract('Timelock', (accounts) => {
       const startDelay = 2;
       const startTime = getCurrentTime() + startDelay;
       const cliffDuration = 1;
-      const gradualDuration = 1;
+      const slopeDuration = 1;
 
-      return getContracts(startTime, cliffDuration, null, gradualDuration, null).then(({ meshToken, timelock }) => {
+      return getContracts(startTime, cliffDuration, null, slopeDuration, null).then(({ meshToken, timelock }) => {
         return timelock.allocateTokens(nonOwner, 100).then(() => {
           return timelock.pauseWithdrawal(nonOwner).then(() => {
             return new Promise(resolve => {
@@ -488,7 +488,7 @@ contract('Timelock', (accounts) => {
                     resolve('');
                   });
                 });
-              }, (startDelay + cliffDuration + gradualDuration + 1) * 1000);
+              }, (startDelay + cliffDuration + slopeDuration + 1) * 1000);
             });
           });
         });
