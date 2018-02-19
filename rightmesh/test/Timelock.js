@@ -202,6 +202,20 @@ contract('Timelock', (accounts) => {
     });
   });
 
+  describe('withdrawnTokens', () => {
+    /**
+     * Scenario:
+     * 1. As soon as timelock is deployed, by default there should be no withdrawnTokens set
+     */
+    it('should be set to 0 by default for any address', () => {
+      return getContracts().then(({ meshToken, timelock }) => {
+        return timelock.withdrawnTokens(nonOwner).then(amount => {
+          assert.equal(0, amount, 'default withdrawnTokens for any address should be 0');
+        });
+      });
+    });
+  });
+
   describe('allocateTokens', () => {
     /**
      * Scenario:
@@ -265,6 +279,105 @@ contract('Timelock', (accounts) => {
             return timelock.allocatedTokens(nonOwner).then(amount => {
               assert.equal(amount, 0, 'allocateTokens should still be set to 0 by now');
             });
+          });
+        });
+      });
+    });
+  });
+
+  describe('availableForWithdrawal', () => {
+    /**
+     * Scenario:
+     * 1. Owner allocates certain amount of tokens to an address.
+     * 2. Anyone tring to see available tokens for withdrawal before cliffDuration is reached.
+     * 3. 0 tokens should be available for withdrawal.
+     */
+    it('should be 0 before cliffDuration is reached', () => {
+      return getContracts().then(({ meshToken, timelock }) => {
+        return timelock.allocateTokens(nonOwner, 100).then(() => {
+          return timelock.availableForWithdrawal(nonOwner).then(amount => {
+            assert.equal(amount, 0, 'Amount available for withdraw before cliffDuration should be 0');
+          });
+        });
+      });
+    });
+
+    /**
+     * Scenario:
+     * 1. Owner allocates certain amount of tokens to an address.
+     * 2. Anyone tring to see available tokens for withdrawal after the locking period is finished.
+     * 3. All tokens should be available for withdrawal.
+     */
+    it('should be equal to maximum after cliffDuration + gradualDuration is reached', () => {
+      const startTime = getCurrentTime() + 1;
+      const cliffDuration = 1;
+      const gradualDuration = 1;
+
+      return getContracts(startTime, cliffDuration, null, gradualDuration, null).then(({ meshToken, timelock }) => {
+        return timelock.allocateTokens(nonOwner, 100).then(() => {
+          return new Promise(resolve => {
+            setTimeout(() => {
+              timelock.availableForWithdrawal(nonOwner).then(amount => {
+                assert.equal(amount, 100, 'Entire amount should be available for withdrawal by the end of vesting period');
+                resolve('');
+              });
+            }, (cliffDuration + gradualDuration + 1) * 1000);
+          });
+        });
+      });
+    });
+
+    /**
+     * Scenario:
+     * 1. Owner allocates certain amount of tokens to an address
+     * 2. Anyone tring to see available tokens for withdrawal between cliffDuration and timelock ending
+     * 3. Atleast cliffReleasePercentage of allocatedTokens amount of tokens should be available for withdrawal.
+     */
+    it('should be greater than cliffReleasePercentage between cliffDuration and gradualDuration', () => {
+      const startTime = getCurrentTime() + 1;
+      const cliffDuration = 1;
+      const cliffReleasePercentage = 10;
+      const gradualDuration = 5;
+      const gradualReleasePercentage = 50;
+      const allocatedTokens = 100;
+
+      return getContracts(startTime, cliffDuration, cliffReleasePercentage, gradualDuration, gradualReleasePercentage).then(({ meshToken, timelock}) => {
+        return timelock.allocateTokens(nonOwner, allocatedTokens).then(() => {
+          return new Promise(resolve => {
+            setTimeout(() => {
+              timelock.availableForWithdrawal(nonOwner).then(amount => {
+                assert.isTrue(amount >= (cliffReleasePercentage * allocatedTokens) / 100, 'Available amoung should be greater than 10% of 100 = 10');
+                resolve('');
+              });
+            }, (cliffDuration + 2) * 1000);
+          });
+        });
+      });
+    });
+
+    /**
+     * Scenario:
+     * 1. Owner allocates certain amount of tokens to an address
+     * 2. Anyone tring to see available tokens for withdrawal between cliffDuration and timelock ending
+     * 3. Atmax allocatedTokens amount of tokens should be available for withdrawal.
+     */
+    it('should be less than total allocateTokens between cliffDuration and gradualDuration', () => {
+      const startTime = getCurrentTime() + 1;
+      const cliffDuration = 1;
+      const cliffReleasePercentage = 10;
+      const gradualDuration = 5;
+      const gradualReleasePercentage = 50;
+      const allocatedTokens = 100;
+
+      return getContracts(startTime, cliffDuration, cliffReleasePercentage, gradualDuration, gradualReleasePercentage).then(({ meshToken, timelock}) => {
+        return timelock.allocateTokens(nonOwner, allocatedTokens).then(() => {
+          return new Promise(resolve => {
+            setTimeout(() => {
+              timelock.availableForWithdrawal(nonOwner).then(amount => {
+                assert.isTrue(amount <= allocatedTokens, 'Available amount should be less than total allocatedTokens');
+                resolve('');
+              });
+            }, (cliffDuration + 4) * 1000);
           });
         });
       });
