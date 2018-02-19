@@ -7,7 +7,7 @@ const utils = require('../utils/utils');
 const web3 = utils.getWeb3(generalSettings.rpcHost);
 
 // Instantiate token by token contract address
-var TimeContractInstance = utils.getTimelockContract(
+var TimelockContractInstance = utils.getTimelockContract(
   web3,
   addressConfig.timelockAddress
 );
@@ -15,7 +15,7 @@ var TimeContractInstance = utils.getTimelockContract(
 allocationConfig.forEach(a => {
   const address = a.address;
   const tokenAmountWei = utils.convertEthToWei(a.tokenAmountETH);
-  const txHash = TimeContractInstance.allocateTokens(
+  const txHash = TimelockContractInstance.allocateTokens(
     address,
     tokenAmountWei,
     {
