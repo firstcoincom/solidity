@@ -160,10 +160,13 @@ contract Timelock is Ownable {
    * @return boolean indicating function success.
    */
   function withdraw() public returns (bool) {
+    require(!withdrawalPaused[msg.sender]);
+
     uint256 availableTokens = availableForWithdrawal(msg.sender);
-    require(!withdrawalPaused[msg.sender] && availableTokens > 0);
-    withdrawnTokens[msg.sender] = withdrawnTokens[msg.sender].add(availableTokens);
-    token.safeTransfer(msg.sender, availableTokens);
+    if (availableTokens > 0) {
+      withdrawnTokens[msg.sender] = withdrawnTokens[msg.sender].add(availableTokens);
+      token.safeTransfer(msg.sender, availableTokens);      
+    }
     return true;
   }
 
