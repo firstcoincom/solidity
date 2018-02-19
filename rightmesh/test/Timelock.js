@@ -157,6 +157,11 @@ contract('Timelock', (accounts) => {
   });
 
   describe('finishAllocation', () => {
+    /**
+     * Scenario:
+     * 1. Owner calls finishAllocation once all the allocation has been done.
+     * 2. Owner successfully able to set allocationFinished to true.
+     */
     it('should allow owner to finishAllocation', () => {
       return getContracts().then(({ meshToken, timelock }) => {
         return timelock.finishAllocation().then(() => {
@@ -167,11 +172,99 @@ contract('Timelock', (accounts) => {
       });
     });
 
+    /**
+     * Scenario:
+     * 1. Non-Owner calls finishAllocation
+     * 2. Non-Owner unable able to set allocationFinished to true.
+     */
     it('should not allow non-owner to finishAllocation', () => {
       return getContracts().then(({ meshToken, timelock }) => {
         return timelock.finishAllocation({ from: nonOwner }).then(() => {
           timelock.allocationFinished().then(allocationFinished => {
             assert.equal(allocationFinished, false, 'should still be set to false by now');
+          });
+        });
+      });
+    });
+  });
+
+  describe('allocatedTokens', () => {
+    /**
+     * Scenario:
+     * 1. As soon as timelock is deployed, by default there should be no allocations.
+     */
+    it('should be set to 0 by default for any address', () => {
+      return getContracts().then(({ meshToken, timelock }) => {
+        return timelock.allocatedTokens(nonOwner).then(amount => {
+          assert.equal(0, amount, 'default allocatedTokens for any address should be 0');
+        });
+      });
+    });
+  });
+
+  describe('allocateTokens', () => {
+    /**
+     * Scenario:
+     * 1. Owner calls allocateTokens to assign tokens to an address.
+     * 2. Owner successfully able to allocate tokens.
+     */
+    it('should allow owner to allocate tokens if allocationFinished is set to false', () => {
+      return getContracts().then(({ meshToken, timelock }) => {
+        return timelock.allocateTokens(nonOwner, 100).then(() => {
+          return timelock.allocatedTokens(nonOwner).then(amount => {
+            assert.equal(amount, 100, 'allocateTokens should be set to 100 by now');
+          });
+        });
+      });
+    });
+
+    /**
+     * Scenario:
+     * 1. Owner calls allocateTokens to assign tokens to an address.
+     * 2. Owner successfully able to allocate tokens.
+     * 3. Owner calls allocateTokens for the same address with updated amount.
+     * 4. Owner successfully able to change allocated tokens.
+     */
+    it('should allow onwert to change allocated tokens if allocationFinished is set to false', () => {
+      return getContracts().then(({ meshToken, timelock }) => {
+        return timelock.allocateTokens(nonOwner, 100).then(() => {
+          return timelock.allocateTokens(nonOwner, 50).then(() => {
+            return timelock.allocatedTokens(nonOwner).then(amount => {
+              assert.equal(amount, 50, 'allocateTokens should be set to 50 by now');
+            });
+          });
+        });
+      });
+    });
+
+    /**
+     * Scenario:
+     * 1. Non-Owner calls allocateTokens to assign tokens to an address.
+     * 2. Non-Owner unable to allocate tokens.
+     */
+    it('should not allow non-owner to allocate tokens', () => {
+      return getContracts().then(({ meshToken, timelock }) => {
+        return timelock.allocateTokens(nonOwner, 100, { from: nonOwner }).then(() => {
+          return timelock.allocatedTokens(nonOwner).then(amount => {
+            assert.equal(amount, 0, 'allocateTokens should still be set to 0 by now');
+          });
+        });
+      });
+    });
+
+    /**
+     * Scenario:
+     * 1. Owner calls finishAllocation once all the token allocation is done.
+     * 2. Owner calls allocateTokens to change the allocateTokens for an address.
+     * 3. Owner unable to change the allocatedTokens.
+     */
+    it('should not allow owner to allocate tokens it allocationFinished is set to true', () => {
+      return getContracts().then(({ meshToken, timelock }) => {
+        return timelock.finishAllocation().then(() => {
+          return timelock.allocateTokens(nonOwner, 100).then(() => {
+            return timelock.allocatedTokens(nonOwner).then(amount => {
+              assert.equal(amount, 0, 'allocateTokens should still be set to 0 by now');
+            });
           });
         });
       });
