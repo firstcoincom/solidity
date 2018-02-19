@@ -429,7 +429,7 @@ contract('Timelock', (accounts) => {
      * 2. User trying to withdraw tokens.
      * 3. User should be able to withdraw whatever has been unlocked.
      */
-    it('should allow message sender to withdraw availableTokens and set withdrawnTokens accrdngly', () => {
+    it('should allow message sender to withdraw availableTokens and set withdrawnTokens accordingly', () => {
       const startDelay = 2;
       const startTime = getCurrentTime() + startDelay;
       const cliffDuration = 1;
@@ -465,7 +465,7 @@ contract('Timelock', (accounts) => {
      * 2. User trying to withdraw tokens.
      * 3. User should not be able to withdraw whatever has been unlocked.
      */
-    it('should not allow message sender to withdraw availableTokens is withdrawlas are paused even if there are unlocked tokens', () => {
+    it('should not allow message sender to withdraw availableTokens if withdrawlas are paused even if there are unlocked tokens', () => {
       const startDelay = 2;
       const startTime = getCurrentTime() + startDelay;
       const cliffDuration = 1;

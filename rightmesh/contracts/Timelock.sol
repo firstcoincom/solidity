@@ -9,26 +9,72 @@ import "zeppelin-solidity/contracts/token/ERC20/ERC20Basic.sol";
  * @title TokenTimelock
  * @dev A token holder contract that can release its token balance gradually like a
  * typical vesting scheme with a cliff, gradual release period, and implied residue.
+ *
  * Withdraws by an address can be paused by the owner.
  */
 contract Timelock is Ownable {
   using SafeMath for uint256;
   using SafeERC20 for ERC20Basic;
 
+  /*
+   * @dev ERC20 token that is being timelocked
+   */
   ERC20Basic public token;
 
-  uint256 public startTime; // timestamp at which the timelock schedule begins
-  uint256 public cliffDuration; // number of seconds from startTime to cliff
-  uint256 public cliffReleasePercentage; // a percentage that becomes available at the cliff, expressed as a number between 0 and 100
-  uint256 public gradualDuration; // number of seconds from cliff to residue, over this period tokens become avialable gradually
-  uint256 public gradualReleasePercentage; // a percentage that becomes avilable over the gradual release perios expressed as a number between 0 and 100
+  /**
+   * @dev timestamp at which the timelock schedule begins
+   */
+  uint256 public startTime;
 
+  /**
+   * @dev number of seconds from startTime to cliff
+   */
+  uint256 public cliffDuration;
+
+  /**
+   * @dev a percentage that becomes available at the cliff, expressed as a number between 0 and 100
+   */
+  uint256 public cliffReleasePercentage;
+
+  /**
+   * @dev number of seconds from cliff to residue, over this period tokens become avialable gradually
+   */
+  uint256 public gradualDuration;
+
+  /**
+   * @dev a percentage that becomes avilable over the gradual release period expressed as a number between 0 and 100
+   */
+  uint256 public gradualReleasePercentage;
+
+  /**
+   * @dev boolean indicating if owner has finished allocation.
+   */
   bool public allocationFinished;
+
+  /**
+   * @dev mapping to keep track of what amount of tokens have been allocated to what address.
+   */
   mapping (address => uint256) public allocatedTokens;
+
+  /**
+   * @dev mapping to keep track of what amount of tokens have been withdrawn by what address.
+   */
   mapping (address => uint256) public withdrawnTokens;
+
+  /**
+   * @dev mapping to keep track of if withdrawls are paused for a given address.
+   */
   mapping (address => bool) public withdrawalPaused;
 
-  // constructor initializes fields and performs some sanity checks on provided values
+  /**
+   * @dev constructor
+   * @param _token address of ERC20 token that is being timelocked.
+   * @param _startTime timestamp indicating when the unlocking of tokens start.
+   * @param _cliffDuration number of seconds before any tokens are unlocked.
+   * @param _cliffReleasePercent percentage of tokens that become available at the cliff time.
+   * @param _gradualDuration number of seconds for gradual release of Tokens.
+   * @param _gradualReleasePercentage percentage of tokens that are released gradually.
+   */
   function Timelock(ERC20Basic _token, uint256 _startTime, uint256 _cliffDuration, uint256 _cliffReleasePercent, uint256 _gradualDuration, uint256 _gradualReleasePercentage) public {
 
     // sanity checks
@@ -46,6 +92,12 @@ contract Timelock is Ownable {
     gradualReleasePercentage = _gradualReleasePercentage;
   }
 
+  /**
+   * @dev helper method that allows owner to allocate tokens to an address.
+   * @param _address beneficiary receiving the tokens.
+   * @param _amount number of tokens being received by beneficiary.
+   * @return boolean indicating function success.
+   */
   function allocateTokens(address _address, uint256 _amount) onlyOwner public returns (bool) {
     require(!allocationFinished);
 
@@ -53,22 +105,39 @@ contract Timelock is Ownable {
     return true;
   }
 
+  /**
+   * @dev helper method that allows owner to mark allocation as done.
+   * @return boolean indicating function success.
+   */
   function finishAllocation() onlyOwner public returns (bool) {
     allocationFinished = true;
 
     return true;
   }
 
+  /**
+   * @dev helper method that allows owner to pause withdrawls for any address.
+   * @return boolean indicating function success.
+   */
   function pauseWithdrawal(address _address) onlyOwner public returns (bool) {
     withdrawalPaused[_address] = true;
     return true;
   }
 
+  /**
+   * @dev helper method that allows owner to unpause withdrawls for any address.
+   * @return boolean indicating function success.
+   */
   function unpauseWithdrawal(address _address) onlyOwner public returns (bool) {
     withdrawalPaused[_address] = false;
     return true;
   }
 
+  /**
+   * @dev helper method that allows anyone to check amount that is available for withdrawl by a given address.
+   * @param _address for which the user needs to check available amount for withdrawl.
+   * @return uint256 number indicating the number of tokens available for withdrawl.
+   */
   function availableForWithdrawal(address _address) public view returns (uint256) {
     uint256 timelockEndTime = startTime.add(cliffDuration).add(gradualDuration);
 
@@ -86,6 +155,10 @@ contract Timelock is Ownable {
     }
   }
 
+  /**
+   * @dev helper method that allows a beneficiary to withdraw tokens that have vested for their address.
+   * @return boolean indicating function success.
+   */
   function withdraw() public returns (bool) {
     uint256 availableTokens = availableForWithdrawal(msg.sender);
     require(!withdrawalPaused[msg.sender] && availableTokens > 0);
