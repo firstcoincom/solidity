@@ -1,13 +1,14 @@
 const utils = require('../utils/utils');
 const timeklockConfig = require('./timelock-config');
 
-const startTime = utils.latestTime() + utils.duration.minutes(5);
+const cliffDuration = 10; // days from start to cliff
+const slopeDuration = 100; // days from cliff to residue
 
 module.exports = {
-  startTime: startTime,
-  cliffDuration :10 ,
+  startTime: 1519091061,
+  cliffDuration : utils.duration.days(cliffDuration) ,
   cliffReleasePercentage: 10,
-  gradualDuration: 10,
-  gradualReleasePercentage: 70,
+  slopeDuration: utils.duration.days(slopeDuration),
+  slopeReleasePercentage: 70,
 }
 
