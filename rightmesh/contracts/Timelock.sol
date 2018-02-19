@@ -32,8 +32,9 @@ contract Timelock is Ownable {
   function Timelock(ERC20Basic _token, uint256 _startTime, uint256 _cliffDuration, uint256 _cliffReleasePercent, uint256 _gradualDuration, uint256 _gradualReleasePercentage) public {
 
     // sanity checks
-    assert(_cliffReleasePercent.add(_gradualReleasePercentage) <= 100);
-    assert(_startTime > now);
+    require(_cliffReleasePercent.add(_gradualReleasePercentage) <= 100);
+    require(_startTime > now);
+    require(_token != address(0));
 
     allocationFinished = false;
 
@@ -69,13 +70,18 @@ contract Timelock is Ownable {
   }
 
   function availableForWithdrawal(address _address) public view returns (uint256) {
+    uint256 timelockEndTime = startTime.add(cliffDuration).add(gradualDuration);
+
     if (now < startTime.add(cliffDuration)) {
       return 0;
-    } else if (now > startTime.add(cliffDuration) && now < startTime.add(cliffDuration).add(gradualDuration)) {
+    } else if (now < timelockEndTime) {
       uint256 cliffTokens = (cliffReleasePercentage.mul(allocatedTokens[_address])).div(100);
-      uint256 divisor = gradualDuration.mul(100);
-      return (((((now.sub(startTime.add(cliffDuration))).mul(gradualReleasePercentage)).mul(allocatedTokens[_address])).div(divisor)).add(cliffTokens)).sub(withdrawnTokens[_address]);
-    } else if (now > startTime.add(cliffDuration).add(gradualDuration)) {
+      uint256 slopeTokens = (allocatedTokens[_address].mul(gradualReleasePercentage)).div(100);
+      uint256 timeAtSlope = now.sub(startTime.add(cliffDuration));
+      uint256 slopeTokensByNow = (slopeTokens.mul(timeAtSlope)).div(gradualDuration);
+
+      return (cliffTokens.add(slopeTokensByNow)).sub(withdrawnTokens[_address]);
+    } else {
       return allocatedTokens[_address].sub(withdrawnTokens[_address]);
     }
   }
