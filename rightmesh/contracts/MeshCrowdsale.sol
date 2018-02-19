@@ -153,7 +153,7 @@ contract MeshCrowdsale is CappedCrowdsale, Ownable {
     // loop through the list and call mint on token directly
     // this minting does not affect any crowdsale numbers
     for (uint i = 0; i < beneficiaries.length; i++) {
-      if (token.balanceOf(beneficiaries[i]) == 0) {
+      if (beneficiaries[i] != address(0) && token.balanceOf(beneficiaries[i]) == 0) {
         token.mint(beneficiaries[i], beneficiaryAmounts[i]);
       }
     }
