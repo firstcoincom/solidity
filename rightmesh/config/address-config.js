@@ -8,4 +8,5 @@ module.exports = {
   // change these variables to interact with the right contract
   tokenAddress: '',
   crowdsaleAddress: '',
+  timelockAddress: '',
 }
