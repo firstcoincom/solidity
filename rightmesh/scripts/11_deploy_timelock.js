@@ -18,6 +18,7 @@ var TimelockInstance = TimelockContract.new(
   addressConfig.tokenAddress,
   timelockConfig.startTime,
   timelockConfig.cliffDuration,
+  timelockConfig.cliffReleasePercentage,
   timelockConfig.gradualDuration,
   timelockConfig.gradualReleasePercentage,
   {
@@ -28,4 +29,4 @@ var TimelockInstance = TimelockContract.new(
 );
 
 
-console.log("Crowdsale Contract is creating at: " + CrowdsaleInstance.transactionHash);
+console.log("Timelock Contract is creating at: " + TimelockInstance.transactionHash);
