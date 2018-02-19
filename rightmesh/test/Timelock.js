@@ -35,19 +35,24 @@ contract('Timelock', (accounts) => {
      * 1. Constructor should set the arguments correctly.
      */
     it('should set the values correctly', () => {
-      return getContracts().then(({ meshToken, timelock }) => {
+      const startTime = getCurrentTime() + 2;
+      return getContracts(startTime).then(({ meshToken, timelock }) => {
         Promise.all([
           timelock.cliffDuration(),
           timelock.cliffReleasePercentage(),
           timelock.slopeDuration(),
           timelock.slopeReleasePercentage(),
-          timelock.allocationFinished()
+          timelock.allocationFinished(),
+          timelock.cliffTime(),
+          timelock.timelockEndTime(),
         ]).then(results => {
           assert.equal(results[0], 10, 'should set cliffDuration correctly');
           assert.equal(results[1], 10, 'should set cliffReleasePercentage correctly');
           assert.equal(results[2], 10, 'should set slopeDuration correctly');
           assert.equal(results[3], 70, 'should set slopeReleasePercentage correctly');
           assert.equal(results[4], false, 'allocationFinished should be set to false by default');
+          assert.equal(results[5], startTime + 10, 'cliffTime should be set to startTime + cliffDuration');
+          assert.equal(results[6], startTime + 10 + 10, 'timelockEndTime should be set to startTime + cliffDuration + slopeDuration');
         });
       });
     });

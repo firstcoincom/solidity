@@ -52,6 +52,16 @@ contract Timelock is Ownable {
   bool public allocationFinished;
 
   /**
+   * @dev variable to keep track of cliff time.
+   */
+  uint256 public cliffTime;
+
+  /**
+   * @dev variable to keep track of when the timelock ends.
+   */
+  uint256 public timelockEndTime;
+
+  /**
    * @dev mapping to keep track of what amount of tokens have been allocated to what address.
    */
   mapping (address => uint256) public allocatedTokens;
@@ -82,14 +92,20 @@ contract Timelock is Ownable {
     require(_startTime > now);
     require(_token != address(0));
 
+    // defaults
     allocationFinished = false;
 
+    // storing constructor params
     token = _token;
     startTime = _startTime;
     cliffDuration = _cliffDuration;
     cliffReleasePercentage = _cliffReleasePercent;
     slopeDuration = _slopeDuration;
     slopeReleasePercentage = _slopeReleasePercentage;
+
+    // derived variables
+    cliffTime = startTime.add(cliffDuration);
+    timelockEndTime = cliffTime.add(slopeDuration);
   }
 
   /**
@@ -139,14 +155,12 @@ contract Timelock is Ownable {
    * @return uint256 number indicating the number of tokens available for withdrawl.
    */
   function availableForWithdrawal(address _address) public view returns (uint256) {
-    uint256 timelockEndTime = startTime.add(cliffDuration).add(slopeDuration);
-
-    if (now < startTime.add(cliffDuration)) {
+    if (now < cliffTime) {
       return 0;
     } else if (now < timelockEndTime) {
       uint256 cliffTokens = (cliffReleasePercentage.mul(allocatedTokens[_address])).div(100);
       uint256 slopeTokens = (allocatedTokens[_address].mul(slopeReleasePercentage)).div(100);
-      uint256 timeAtSlope = now.sub(startTime.add(cliffDuration));
+      uint256 timeAtSlope = now.sub(cliffTime);
       uint256 slopeTokensByNow = (slopeTokens.mul(timeAtSlope)).div(slopeDuration);
 
       return (cliffTokens.add(slopeTokensByNow)).sub(withdrawnTokens[_address]);
@@ -165,7 +179,7 @@ contract Timelock is Ownable {
     uint256 availableTokens = availableForWithdrawal(msg.sender);
     if (availableTokens > 0) {
       withdrawnTokens[msg.sender] = withdrawnTokens[msg.sender].add(availableTokens);
-      token.safeTransfer(msg.sender, availableTokens);      
+      token.safeTransfer(msg.sender, availableTokens);
     }
     return true;
   }
