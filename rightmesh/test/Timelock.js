@@ -16,10 +16,15 @@ contract('Timelock', (accounts) => {
 
     return MeshToken.new().then(meshToken => {
       return Timelock.new(meshToken.address, startTime, cliffDuration, cliffReleasePercentage, gradualDuration, gradualReleasePercentage).then(timelock => {
-        return ({
-          timelock,
-          meshToken,
-        });
+        return Promise.all([
+          meshToken.unpause(),
+          meshToken.mint(timelock.address, 1000000)
+        ]).then(() => {
+          return {
+            timelock,
+            meshToken,
+          };
+        })
       });
     });
   }
@@ -239,7 +244,7 @@ contract('Timelock', (accounts) => {
      * 3. Owner calls allocateTokens for the same address with updated amount.
      * 4. Owner successfully able to change allocated tokens.
      */
-    it('should allow onwert to change allocated tokens if allocationFinished is set to false', () => {
+    it('should allow onwer to change allocated tokens if allocationFinished is set to false', () => {
       return getContracts().then(({ meshToken, timelock }) => {
         return timelock.allocateTokens(nonOwner, 100).then(() => {
           return timelock.allocateTokens(nonOwner, 50).then(() => {
@@ -289,7 +294,7 @@ contract('Timelock', (accounts) => {
     /**
      * Scenario:
      * 1. Owner allocates certain amount of tokens to an address.
-     * 2. Anyone tring to see available tokens for withdrawal before cliffDuration is reached.
+     * 2. Anyone trying to see available tokens for withdrawal before cliffDuration is reached.
      * 3. 0 tokens should be available for withdrawal.
      */
     it('should be 0 before cliffDuration is reached', () => {
@@ -305,11 +310,12 @@ contract('Timelock', (accounts) => {
     /**
      * Scenario:
      * 1. Owner allocates certain amount of tokens to an address.
-     * 2. Anyone tring to see available tokens for withdrawal after the locking period is finished.
+     * 2. Anyone trying to see available tokens for withdrawal after the locking period is finished.
      * 3. All tokens should be available for withdrawal.
      */
     it('should be equal to maximum after cliffDuration + gradualDuration is reached', () => {
-      const startTime = getCurrentTime() + 1;
+      const startDelay = 2;
+      const startTime = getCurrentTime() + startDelay;
       const cliffDuration = 1;
       const gradualDuration = 1;
 
@@ -321,7 +327,7 @@ contract('Timelock', (accounts) => {
                 assert.equal(amount, 100, 'Entire amount should be available for withdrawal by the end of vesting period');
                 resolve('');
               });
-            }, (cliffDuration + gradualDuration + 1) * 1000);
+            }, (startDelay + cliffDuration + gradualDuration + 1) * 1000);
           });
         });
       });
@@ -330,11 +336,12 @@ contract('Timelock', (accounts) => {
     /**
      * Scenario:
      * 1. Owner allocates certain amount of tokens to an address
-     * 2. Anyone tring to see available tokens for withdrawal between cliffDuration and timelock ending
+     * 2. Anyone trying to see available tokens for withdrawal between cliffDuration and timelock ending
      * 3. Atleast cliffReleasePercentage of allocatedTokens amount of tokens should be available for withdrawal.
      */
     it('should be greater than cliffReleasePercentage between cliffDuration and gradualDuration', () => {
-      const startTime = getCurrentTime() + 1;
+      const startDelay = 2;
+      const startTime = getCurrentTime() + startDelay;
       const cliffDuration = 1;
       const cliffReleasePercentage = 10;
       const gradualDuration = 5;
@@ -349,7 +356,7 @@ contract('Timelock', (accounts) => {
                 assert.isTrue(amount >= (cliffReleasePercentage * allocatedTokens) / 100, 'Available amoung should be greater than 10% of 100 = 10');
                 resolve('');
               });
-            }, (cliffDuration + 2) * 1000);
+            }, (startDelay + cliffDuration + 2) * 1000);
           });
         });
       });
@@ -358,11 +365,12 @@ contract('Timelock', (accounts) => {
     /**
      * Scenario:
      * 1. Owner allocates certain amount of tokens to an address
-     * 2. Anyone tring to see available tokens for withdrawal between cliffDuration and timelock ending
+     * 2. Anyone trying to see available tokens for withdrawal between cliffDuration and timelock ending
      * 3. Atmax allocatedTokens amount of tokens should be available for withdrawal.
      */
     it('should be less than total allocateTokens between cliffDuration and gradualDuration', () => {
-      const startTime = getCurrentTime() + 1;
+      const startDelay = 2;
+      const startTime = getCurrentTime() + startDelay;
       const cliffDuration = 1;
       const cliffReleasePercentage = 10;
       const gradualDuration = 5;
@@ -377,7 +385,111 @@ contract('Timelock', (accounts) => {
                 assert.isTrue(amount <= allocatedTokens, 'Available amount should be less than total allocatedTokens');
                 resolve('');
               });
-            }, (cliffDuration + 4) * 1000);
+            }, (startDelay + cliffDuration + 4) * 1000);
+          });
+        });
+      });
+    });
+  });
+
+  describe('withdraw', () => {
+
+    /**
+     * Scenario:
+     * 1. Owner allocates certain amount of tokens to an address
+     * 2. User trying to withdraw tokens before the cliffDuration has been reached.
+     * 3. User should not be able to withdraw anything.
+     */
+    it('should not allow message sender to withdraw anything before cliffDuration has been reached', () => {
+      const startDelay = 2;
+      const startTime = getCurrentTime() + startDelay;
+      const cliffDuration = 1;
+      const gradualDuration = 1;
+
+      return getContracts(startTime, cliffDuration, null, gradualDuration, null).then(({ meshToken, timelock }) => {
+        return timelock.allocateTokens(nonOwner, 100).then(() => {
+          return timelock.withdraw({ from: nonOwner }).then(() => {
+            return Promise.all([
+              timelock.withdrawnTokens(nonOwner),
+              meshToken.balanceOf(nonOwner),
+            ]).then(results => {
+              const withdrawnTokens = results[0];
+              const nonOwnerBalance = results[1];
+              assert.equal(withdrawnTokens, 0, 'no tokens should be withdrawn by now');
+              assert.equal(nonOwnerBalance, 0, 'owner should still not have received any tokens');
+            });
+          });
+        });
+      });
+    });
+
+    /**
+     * Scenario:
+     * 1. Owner allocates certain amount of tokens to an address
+     * 2. User trying to withdraw tokens.
+     * 3. User should be able to withdraw whatever has been unlocked.
+     */
+    it('should allow message sender to withdraw availableTokens and set withdrawnTokens accrdngly', () => {
+      const startDelay = 2;
+      const startTime = getCurrentTime() + startDelay;
+      const cliffDuration = 1;
+      const gradualDuration = 1;
+
+      return getContracts(startTime, cliffDuration, null, gradualDuration, null).then(({ meshToken, timelock }) => {
+        return timelock.allocateTokens(nonOwner, 100).then(() => {
+          return new Promise(resolve => {
+            setTimeout(() => {
+              timelock.withdraw({ from: nonOwner }).then(() => {
+                Promise.all([
+                  timelock.withdrawnTokens(nonOwner),
+                  meshToken.balanceOf(nonOwner),
+                ]).then(results => {
+                  const withdrawnTokens = results[0];
+                  const nonOwnerBalance = results[1];
+                  assert.equal(withdrawnTokens, 100, 'withdrawnTokens should be set to 100 by now');
+                  assert.equal(nonOwnerBalance, 100, 'nonOwnerBalance should be set to 100 by now');
+                  resolve('');
+                });
+              });
+            }, (startDelay + cliffDuration + gradualDuration + 1) * 1000);
+          });
+        });
+      });
+    });
+
+
+    /**
+     * Scenario:
+     * 1. Owner allocates certain amount of tokens to an address
+     * 2. Owner called pause on withdrawlas for that address.
+     * 2. User trying to withdraw tokens.
+     * 3. User should not be able to withdraw whatever has been unlocked.
+     */
+    it('should not allow message sender to withdraw availableTokens is withdrawlas are paused even if there are unlocked tokens', () => {
+      const startDelay = 2;
+      const startTime = getCurrentTime() + startDelay;
+      const cliffDuration = 1;
+      const gradualDuration = 1;
+
+      return getContracts(startTime, cliffDuration, null, gradualDuration, null).then(({ meshToken, timelock }) => {
+        return timelock.allocateTokens(nonOwner, 100).then(() => {
+          return timelock.pauseWithdrawal(nonOwner).then(() => {
+            return new Promise(resolve => {
+              setTimeout(() => {
+                timelock.withdraw({ from: nonOwner }).then(() => {
+                  Promise.all([
+                    timelock.withdrawnTokens(nonOwner),
+                    meshToken.balanceOf(nonOwner),
+                  ]).then(results => {
+                    const withdrawnTokens = results[0];
+                    const nonOwnerBalance = results[1];
+                    assert.equal(withdrawnTokens, 0, 'no tokens should be withdrawn by now');
+                    assert.equal(nonOwnerBalance, 0, 'owner should still not have received any tokens');
+                    resolve('');
+                  });
+                });
+              }, (startDelay + cliffDuration + gradualDuration + 1) * 1000);
+            });
           });
         });
       });
