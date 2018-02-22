@@ -109,6 +109,22 @@ contract('MeshCrowdsale', (accounts) => {
 
     /**
      * Scenario:
+     * 1. Contract owner calling contract to set rate to 0
+     * 2. Owner should not be able to change the rate to 0
+     */
+    it('should not allow owner to set rate to 0', () => {
+      const newRate = 0;
+      return getContracts().then(({ meshCrowdsale, meshToken }) => {
+        return meshCrowdsale.setRate(newRate).then(() => {
+          return meshCrowdsale.rate().then(_rate => {
+            assert.equal(_rate, rate, 'Rate should still be as original defined in the constructor');
+          });
+        });
+      });
+    });
+
+    /**
+     * Scenario:
      * 1. Non Contract owner calling contract to set rate
      * 2. It should not allow non-contract owners to change the rate.
      */
@@ -162,6 +178,22 @@ contract('MeshCrowdsale', (accounts) => {
         return meshCrowdsale.setCap(newCap).then(() => {
           return meshCrowdsale.cap().then(_cap => {
             assert.equal(_cap, newCap, 'Cap should be equal to new cap now');
+          });
+        });
+      });
+    });
+
+    /**
+     * Scenario:
+     * 1. Contract owner calling contract to set cap to 0
+     * 2. Owner should not be able to change the cap to 0
+     */
+    it('should not allow the owner to change the cap to 0', () => {
+      const newCap = 0;
+      return getContracts().then(({ meshCrowdsale, meshToken }) => {
+        return meshCrowdsale.setCap(newCap).then(() => {
+          return meshCrowdsale.cap().then(_cap => {
+            assert.equal(_cap, crowdsaleCap, 'Cap should still be as original defined in the constructor');
           });
         });
       });

@@ -125,6 +125,9 @@ contract MeshCrowdsale is CappedCrowdsale, Ownable {
     // make sure the crowdsale has not started
     require(weiRaised == 0);
 
+    // make sure new rate is greater than 0
+    require(_rate > 0);
+
     rate = _rate;
     return true;
   }
@@ -138,6 +141,9 @@ contract MeshCrowdsale is CappedCrowdsale, Ownable {
   function setCap(uint256 _cap) external onlyOwner returns (bool) {
     // make sure the crowdsale has not started
     require(weiRaised == 0);
+
+    // make sure new cap is greater than 0
+    require(_cap > 0);
 
     cap = _cap;
     return true;
