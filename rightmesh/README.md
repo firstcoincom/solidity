@@ -144,9 +144,10 @@ $ node 5_deploy_crowdsale.js
 ```
 $ node 6_token_ownership_to_crowdsale.js
 ```
-3. Finalize ETH to token rate and update the contract.
+3. Finalize ETH to token rate and crowdsale cap and update the contract.
 ```
 $ node 7_set_rate.js
+$ node 7_set_cap.js
 ```
 4. Finalize minimum contribution and update the contract.
 ```

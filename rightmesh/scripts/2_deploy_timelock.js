@@ -19,8 +19,8 @@ var TimelockInstance = TimelockContract.new(
   timelockConfig.startTime,
   timelockConfig.cliffDuration,
   timelockConfig.cliffReleasePercentage,
-  timelockConfig.gradualDuration,
-  timelockConfig.gradualReleasePercentage,
+  timelockConfig.slopeDuration,
+  timelockConfig.slopeReleasePercentage,
   {
     data: timelockBytecode,
     from: addressConfig.ownerAddress,
