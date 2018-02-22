@@ -122,6 +122,92 @@ contract('MeshCrowdsale', (accounts) => {
         });
       });
     });
+
+    it('should not allow owner to change rate once crowdsale has started', () => {
+      /**
+       * Scenario:
+       * 1. Contract owner calling contract to allow whitelisting agent
+       * 2. Whitelisting agent to to increase the contribution limit for address
+       * 3. User trying to contribute within set limits and total contribution cap is not reached yet
+       * 4. Transaction should succeed
+       * 5. The owner then tries to change the ETH to token rate.
+       * 6. Owner should not be able to change the rate anymore.
+       */
+      return getContracts().then(({ meshCrowdsale, meshToken }) => {
+        const newRate = 100000;
+        return meshCrowdsale.setWhitelistingAgent(addr1, true).then(() => {
+          return meshCrowdsale.setLimit([addr1], contributionLimit, { from: addr1 }).then(() => {
+            return meshCrowdsale.sendTransaction({value: contributionAmount, from: addr1}).then(() => {
+              return meshCrowdsale.setRate(newRate, { from: addr1 }).then(() => {
+                return meshCrowdsale.rate().then(_rate => {
+                  assert.equal(_rate, rate, 'Rate should still be as original defined in the constructor');
+                });
+              });
+            });
+          });
+        });
+      });
+    });
+  });
+
+  describe('setCap', () => {
+    /**
+     * Scenario:
+     * 1. Contract owner calling contract to set cap
+     * 2. It should allow contract owners to change the cap.
+     */
+    it('should change the cap when called', () => {
+      const newCap = 100000;
+      return getContracts().then(({ meshCrowdsale, meshToken }) => {
+        return meshCrowdsale.setCap(newCap).then(() => {
+          return meshCrowdsale.cap().then(_cap => {
+            assert.equal(_cap, newCap, 'Cap should be equal to new cap now');
+          });
+        });
+      });
+    });
+
+    /**
+     * Scenario:
+     * 1. Non Contract owner calling contract to set cap
+     * 2. It should not allow non-contract owners to change the cap.
+     */
+    it('should not allow non owner to change the cap', () => {
+      const newCap = 100000;
+      return getContracts().then(({ meshCrowdsale, meshToken }) => {
+        return meshCrowdsale.setCap(newCap, { from: addr1 }).then(() => {
+          return meshCrowdsale.cap().then(_cap => {
+            assert.equal(_cap, crowdsaleCap, 'Cap should still be as original defined in the constructor');
+          });
+        });
+      });
+    });
+
+    it('should not allow owner to change rate once crowdsale has started', () => {
+      /**
+       * Scenario:
+       * 1. Contract owner calling contract to allow whitelisting agent
+       * 2. Whitelisting agent to to increase the contribution limit for address
+       * 3. User trying to contribute within set limits and total contribution cap is not reached yet
+       * 4. Transaction should succeed
+       * 5. The owner then tries to change the crowdsale cap.
+       * 6. Owner should not be able to change the cap anymore.
+       */
+      return getContracts().then(({ meshCrowdsale, meshToken }) => {
+        const newCap = 100000;
+        return meshCrowdsale.setWhitelistingAgent(addr1, true).then(() => {
+          return meshCrowdsale.setLimit([addr1], contributionLimit, { from: addr1 }).then(() => {
+            return meshCrowdsale.sendTransaction({value: contributionAmount, from: addr1}).then(() => {
+              return meshCrowdsale.setCap(newCap, { from: addr1 }).then(() => {
+                return meshCrowdsale.cap().then(_cap => {
+                  assert.equal(_cap, crowdsaleCap, 'Cap should still be as original defined in the constructor');
+                });
+              });
+            });
+          });
+        });
+      });
+    });
   });
 
   describe('setMinimumContribution', () => {

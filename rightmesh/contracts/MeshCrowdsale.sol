@@ -122,7 +122,24 @@ contract MeshCrowdsale is CappedCrowdsale, Ownable {
    * @return boolean indicating function success.
    */
   function setRate(uint256 _rate) external onlyOwner returns (bool) {
+    // make sure the crowdsale has not started
+    require(weiRaised == 0);
+
     rate = _rate;
+    return true;
+  }
+
+
+  /**
+   * @dev Allows the current owner to change the crowdsale cap.
+   * @param _cap indicating the new crowdsale cap.
+   * @return boolean indicating function success.
+   */
+  function setCap(uint256 _cap) external onlyOwner returns (bool) {
+    // make sure the crowdsale has not started
+    require(weiRaised == 0);
+
+    cap = _cap;
     return true;
   }
 
