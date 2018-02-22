@@ -8,7 +8,7 @@ const web3 = utils.getWeb3(generalSettings.rpcHost);
 // instantiate timelock by timelock contract address
 var TimelockInstance = utils.getTimelockContract(
   web3,
-  addressConfig.crowdsaleAddress
+  addressConfig.timelockAddress
 );
 
 // finish token allocation in timelock contract
