@@ -840,10 +840,10 @@ contract('MeshCrowdsale', (accounts) => {
      * Scenario:
      * 1. Crowdsale contract is deployed
      * 2. Wait for the crowdsale to start and 1st contribution to show up
-     * 3. Anyone calling mintPredefinedTokens after 1st contribution
+     * 3. Owner calling mintPredefinedTokens after 1st contribution
      * 4. Tokens should be minted to the beneficiary addresses now.
      */
-    it('should mint tokens when contribution has been made', () => {
+    it('should mint tokens when called by owner and contribution has been made', () => {
       return getContracts().then(({ meshCrowdsale, meshToken }) => {
         return meshCrowdsale.setWhitelistingAgent(addr1, true).then(() => {
           return meshCrowdsale.setLimit([addr1], crowdsaleCap, { from: addr1 }).then(() => {
@@ -856,6 +856,33 @@ contract('MeshCrowdsale', (accounts) => {
                 ]).then(results => {
                   assert.equal(results[0], beneficiaryAmounts[0], "beneficiary 0 should have tokens now");
                   assert.equal(results[1], beneficiaryAmounts[1], "beneficiary 1 should have tokens now");
+                });
+              });
+            });
+          });
+        });
+      });
+    });
+
+    /**
+     * Scenario:
+     * 1. Crowdsale contract is deployed
+     * 2. Wait for the crowdsale to start and 1st contribution to show up
+     * 3. Non-owner calling mintPredefinedTokens after 1st contribution
+     * 4. It should do nothing.
+     */
+    it('should do nothing when called by non-owner', () => {
+      return getContracts().then(({ meshCrowdsale, meshToken }) => {
+        return meshCrowdsale.setWhitelistingAgent(addr1, true).then(() => {
+          return meshCrowdsale.setLimit([addr1], crowdsaleCap, { from: addr1 }).then(() => {
+            return meshCrowdsale.sendTransaction({ value: minimumContribution, from: addr1}).then(() => {
+              return meshCrowdsale.mintPredefinedTokens({ from: addr1 }).then(() => {
+                return Promise.all([
+                  meshToken.balanceOf(beneficiaries[0]),
+                  meshToken.balanceOf(beneficiaries[1]),
+                ]).then(results => {
+                  assert.equal(results[0], 0, "beneficiary 0 should not have any tokens");
+                  assert.equal(results[1], 0, "beneficiary 1 should not have any tokens");
                 });
               });
             });

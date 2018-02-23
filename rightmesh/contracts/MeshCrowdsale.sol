@@ -164,7 +164,7 @@ contract MeshCrowdsale is CappedCrowdsale, Ownable {
    * can be called by anyone as the outcome is fixed and does not depend on who is calling the method
    * can be called multiple times but will only do the minting once per address
    */
-  function mintPredefinedTokens() external returns (bool) {
+  function mintPredefinedTokens() external onlyOwner returns (bool) {
     // make sure the crowdsale has started
     require(weiRaised > 0);
 
