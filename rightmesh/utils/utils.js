@@ -30,6 +30,7 @@ const getJson = file => {
 
 const crowdsaleJsonFile = '../build/contracts/MeshCrowdsale.json';
 const tokenJsonFile = '../build/contracts/MeshToken.json';
+const timelockJsonFile = '../build/contracts/Timelock.json';
 
 const getCrowdsaleContract = (_web3, contractAddress) => {
   const jsonContent = getJson(crowdsaleJsonFile);
@@ -43,6 +44,12 @@ const getTokenContract = (_web3, contractAddress) => {
   return Token.at(contractAddress);
 }
 
+const getTimelockContract = (_web3, contractAddress) => {
+  const jsonContent = getJson(timelockJsonFile);
+  const Timelock = _web3.eth.contract(jsonContent.abi);
+  return Timelock.at(contractAddress);
+}
+
 module.exports = {
   convertEthToWei,
   latestTime,
@@ -50,4 +57,5 @@ module.exports = {
   getWeb3,
   getCrowdsaleContract,
   getTokenContract,
+  getTimelockContract,
 }

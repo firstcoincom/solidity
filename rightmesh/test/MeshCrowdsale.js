@@ -8,7 +8,10 @@ contract('MeshCrowdsale', (accounts) => {
 
   const addr1 = accounts[1];
   const contributionLimit = 100;
+  const minimumContribution = 10;
   const contributionAmount = contributionLimit / 2;
+  const beneficiaries = [accounts[2], accounts[3]];
+  const beneficiaryAmounts = [ 100, 200 ];
 
   const getCurrentTime = () => Math.floor(Date.now() / 1000);
 
@@ -23,7 +26,7 @@ contract('MeshCrowdsale', (accounts) => {
       const deployCrowdsale = () => {
         startTime = startTime || getCurrentTime();
         endTime = endTime || (startTime + 10000000);
-        return MeshCrowdsale.new(startTime, endTime, rate, wallet, crowdsaleCap, meshToken.address);
+        return MeshCrowdsale.new(startTime, endTime, rate, wallet, crowdsaleCap, minimumContribution, meshToken.address, beneficiaries, beneficiaryAmounts);
       };
       // when deploying contract, we are setting startTime equal to current time
       // occassionally time second flips before next deploy, therefore setting out start time in past
@@ -106,6 +109,22 @@ contract('MeshCrowdsale', (accounts) => {
 
     /**
      * Scenario:
+     * 1. Contract owner calling contract to set rate to 0
+     * 2. Owner should not be able to change the rate to 0
+     */
+    it('should not allow owner to set rate to 0', () => {
+      const newRate = 0;
+      return getContracts().then(({ meshCrowdsale, meshToken }) => {
+        return meshCrowdsale.setRate(newRate).then(() => {
+          return meshCrowdsale.rate().then(_rate => {
+            assert.equal(_rate, rate, 'Rate should still be as original defined in the constructor');
+          });
+        });
+      });
+    });
+
+    /**
+     * Scenario:
      * 1. Non Contract owner calling contract to set rate
      * 2. It should not allow non-contract owners to change the rate.
      */
@@ -115,6 +134,142 @@ contract('MeshCrowdsale', (accounts) => {
         return meshCrowdsale.setRate(newRate, { from: addr1 }).then(() => {
           return meshCrowdsale.rate().then(_rate => {
             assert.equal(_rate, rate, 'Rate should still be as original defined in the constructor');
+          });
+        });
+      });
+    });
+
+    it('should not allow owner to change rate once crowdsale has started', () => {
+      /**
+       * Scenario:
+       * 1. Contract owner calling contract to allow whitelisting agent
+       * 2. Whitelisting agent to to increase the contribution limit for address
+       * 3. User trying to contribute within set limits and total contribution cap is not reached yet
+       * 4. Transaction should succeed
+       * 5. The owner then tries to change the ETH to token rate.
+       * 6. Owner should not be able to change the rate anymore.
+       */
+      return getContracts().then(({ meshCrowdsale, meshToken }) => {
+        const newRate = 100000;
+        return meshCrowdsale.setWhitelistingAgent(addr1, true).then(() => {
+          return meshCrowdsale.setLimit([addr1], contributionLimit, { from: addr1 }).then(() => {
+            return meshCrowdsale.sendTransaction({value: contributionAmount, from: addr1}).then(() => {
+              return meshCrowdsale.setRate(newRate, { from: addr1 }).then(() => {
+                return meshCrowdsale.rate().then(_rate => {
+                  assert.equal(_rate, rate, 'Rate should still be as original defined in the constructor');
+                });
+              });
+            });
+          });
+        });
+      });
+    });
+  });
+
+  describe('setCap', () => {
+    /**
+     * Scenario:
+     * 1. Contract owner calling contract to set cap
+     * 2. It should allow contract owners to change the cap.
+     */
+    it('should change the cap when called', () => {
+      const newCap = 100000;
+      return getContracts().then(({ meshCrowdsale, meshToken }) => {
+        return meshCrowdsale.setCap(newCap).then(() => {
+          return meshCrowdsale.cap().then(_cap => {
+            assert.equal(_cap, newCap, 'Cap should be equal to new cap now');
+          });
+        });
+      });
+    });
+
+    /**
+     * Scenario:
+     * 1. Contract owner calling contract to set cap to 0
+     * 2. Owner should not be able to change the cap to 0
+     */
+    it('should not allow the owner to change the cap to 0', () => {
+      const newCap = 0;
+      return getContracts().then(({ meshCrowdsale, meshToken }) => {
+        return meshCrowdsale.setCap(newCap).then(() => {
+          return meshCrowdsale.cap().then(_cap => {
+            assert.equal(_cap, crowdsaleCap, 'Cap should still be as original defined in the constructor');
+          });
+        });
+      });
+    });
+
+    /**
+     * Scenario:
+     * 1. Non Contract owner calling contract to set cap
+     * 2. It should not allow non-contract owners to change the cap.
+     */
+    it('should not allow non owner to change the cap', () => {
+      const newCap = 100000;
+      return getContracts().then(({ meshCrowdsale, meshToken }) => {
+        return meshCrowdsale.setCap(newCap, { from: addr1 }).then(() => {
+          return meshCrowdsale.cap().then(_cap => {
+            assert.equal(_cap, crowdsaleCap, 'Cap should still be as original defined in the constructor');
+          });
+        });
+      });
+    });
+
+    it('should not allow owner to change rate once crowdsale has started', () => {
+      /**
+       * Scenario:
+       * 1. Contract owner calling contract to allow whitelisting agent
+       * 2. Whitelisting agent to to increase the contribution limit for address
+       * 3. User trying to contribute within set limits and total contribution cap is not reached yet
+       * 4. Transaction should succeed
+       * 5. The owner then tries to change the crowdsale cap.
+       * 6. Owner should not be able to change the cap anymore.
+       */
+      return getContracts().then(({ meshCrowdsale, meshToken }) => {
+        const newCap = 100000;
+        return meshCrowdsale.setWhitelistingAgent(addr1, true).then(() => {
+          return meshCrowdsale.setLimit([addr1], contributionLimit, { from: addr1 }).then(() => {
+            return meshCrowdsale.sendTransaction({value: contributionAmount, from: addr1}).then(() => {
+              return meshCrowdsale.setCap(newCap, { from: addr1 }).then(() => {
+                return meshCrowdsale.cap().then(_cap => {
+                  assert.equal(_cap, crowdsaleCap, 'Cap should still be as original defined in the constructor');
+                });
+              });
+            });
+          });
+        });
+      });
+    });
+  });
+
+  describe('setMinimumContribution', () => {
+    /**
+     * Scenario:
+     * 1. Contract owner calling contract to set minimum contribution amount.
+     * 2. It should allow contract owners to change the minimum contribution amount.
+     */
+    it('should change the minimum contribution when called', () => {
+      const newMinimumContribution = 100000;
+      return getContracts().then(({ meshCrowdsale, meshToken }) => {
+        return meshCrowdsale.setMinimumContribution(newMinimumContribution).then(() => {
+          return meshCrowdsale.minimumContribution().then(_minimumContribution => {
+            assert.equal(_minimumContribution, newMinimumContribution, 'Minimum contribution should be equal to new _minimumContribution now');
+          });
+        });
+      });
+    });
+
+    /**
+     * Scenario:
+     * 1. Non Contract owner calling contract to set minimum contribution amount.
+     * 2. It should not allow contract non-owners to change the minimum contribution amount.
+     */
+    it('should not allow non owner to change the minimum contribution', () => {
+      const newMinimumContribution = 100000;
+      return getContracts().then(({ meshCrowdsale, meshToken }) => {
+        return meshCrowdsale.setMinimumContribution(newMinimumContribution, { from: addr1 }).then(() => {
+          return meshCrowdsale.minimumContribution().then(_minimumContribution => {
+            assert.equal(_minimumContribution, minimumContribution, 'Minimum contribution should be original');
           });
         });
       });
@@ -283,103 +438,6 @@ contract('MeshCrowdsale', (accounts) => {
         return meshCrowdsale.transferTokenOwnership({ from: accounts[1] }).then(() => {
           return meshToken.owner().then(owner => {
             assert.equal(owner, meshCrowdsale.address, "Token should still be owned by contract only");
-          });
-        });
-      });
-    });
-  });
-
-  describe('pauseToken', () => {
-    /**
-     * Scenario:
-     * 1. Contract owner call pauseToken to pause token transfers
-     * 2. Token transfers should be paused now.
-     */
-    it('should pause token when requested by owner', () => {
-      return getContracts().then(({ meshCrowdsale, meshToken }) => {
-        return meshCrowdsale.pauseToken().then(() => {
-          return meshToken.paused().then(paused => {
-            assert.equal(paused, true, "Token should be paused now");
-          });
-        });
-      });
-    });
-
-    /**
-     * Scenario:
-     * 1. Contract owner calls pauseToken to pause token transfers
-     * 2. Token transfers should be paused now
-     * 3. Contract owner calls unpauseToken to unpause token transfers
-     * 4. Token transfers should be unpaused now
-     * 5. Contract owner calls pauseToken again to pause token transfers
-     * 6. Contract owner should not be able to pause the transfers again
-     */
-    it('should pause token only once requested by owner', () => {
-      return getContracts().then(({ meshCrowdsale, meshToken }) => {
-        return meshCrowdsale.pauseToken().then(() => {
-          return meshToken.paused().then(paused => {
-            assert.equal(paused, true, "Token should be paused now");
-            return meshCrowdsale.unpauseToken().then(() => {
-              return meshToken.paused().then(paused => {
-                assert.equal(paused, false, "Token should be unpaused now");
-                return meshCrowdsale.pauseToken().then(() => {
-                  return meshToken.paused().then(paused => {
-                    assert.equal(paused, false, "Token should still be unpaused now");
-                  });
-                });
-              });
-            });
-          });
-        });
-      });
-    });
-
-    /**
-     * Scenario:
-     * 1. Non owner call pauseToken to pause token transfers
-     * 2. Token transfers should still be unpaused.
-     */
-   it('should not pause token when requested by non-owner', () => {
-      return getContracts().then(({ meshCrowdsale, meshToken }) => {
-        return meshCrowdsale.pauseToken({ from: accounts[1] }).then(() => {
-          return meshToken.paused().then(paused => {
-            assert.equal(paused, false, "Token should be paused now");
-          });
-        });
-      });
-    });
-  });
-
-  describe('unpauseToken', () => {
-    /**
-     * Scenario:
-     * 1. Contract owner call unpauseToken to pause token transfers
-     * 2. Token transfers should be unpaused now.
-     */
-   it('should unpause token when requested by owner', () => {
-      return getContracts().then(({ meshCrowdsale, meshToken }) => {
-        return meshCrowdsale.pauseToken().then(() => {
-          return meshCrowdsale.unpauseToken().then(() => {
-            return meshToken.paused().then(paused => {
-              assert.equal(paused, false, "Token should be unpaused now");
-            });
-          });
-        });
-      });
-    });
-
-    /**
-     * Scenario:
-     * 1. Non owner call unpauseToken to pause token transfers
-     * 2. Token transfers should still be paused.
-     */
-   it('should not unpause token when requested by non-owner', () => {
-      return getContracts().then(({ meshCrowdsale, meshToken }) => {
-        return meshCrowdsale.pauseToken().then(() => {
-          return meshCrowdsale.pauseToken({ from: accounts[1] }).then(() => {
-            return meshToken.paused().then(paused => {
-              assert.equal(paused, true, "Token should still be paused now");
-            });
           });
         });
       });
@@ -661,6 +719,243 @@ contract('MeshCrowdsale', (accounts) => {
             return meshCrowdsale.sendTransaction({ value: crowdsaleCap, from: addr1}).then(() => {
               return meshToken.balanceOf(addr1).then(balance => {
                 assert.equal(rate * crowdsaleCap, balance, "Token balance should be rate * crowdsaleCap");
+              });
+            });
+          });
+        });
+      });
+    });
+
+    it('ERROR: should not allow first contribution to be less than minimum contribution', () => {
+      /**
+       * Scenario:
+       * 1. Change user contribution limit equal to the crowdsale cap.
+       * 2. User tries to contribuite less than minimum amount
+       * 3. User should not be able to contribute.
+       */
+      return getContracts().then(({ meshCrowdsale, meshToken }) => {
+        return meshCrowdsale.setWhitelistingAgent(addr1, true).then(() => {
+          return meshCrowdsale.setLimit([addr1], crowdsaleCap, { from: addr1 }).then(() => {
+            return meshCrowdsale.sendTransaction({ value: minimumContribution - 1, from: addr1}).then(() => {
+              return meshToken.balanceOf(addr1).then(balance => {
+                assert.equal(0, balance, "Token balance should be 0");
+              });
+            });
+          });
+        });
+      });
+    });
+
+    it('SUCCESS: should allow first contribution if equal to minimum contribution', () => {
+      /**
+       * Scenario:
+       * 1. Change user contribution limit equal to the crowdsale cap.
+       * 2. User tries to contribuite equal to minimum amount
+       * 3. User should be able to contribute.
+       */
+      return getContracts().then(({ meshCrowdsale, meshToken }) => {
+        return meshCrowdsale.setWhitelistingAgent(addr1, true).then(() => {
+          return meshCrowdsale.setLimit([addr1], crowdsaleCap, { from: addr1 }).then(() => {
+            return meshCrowdsale.sendTransaction({ value: minimumContribution, from: addr1}).then(() => {
+              return meshToken.balanceOf(addr1).then(balance => {
+                assert.equal(rate * minimumContribution, balance, "Token balance should be positive now");
+              });
+            });
+          });
+        });
+      });
+    });
+
+    it('SUCCESS: should allow first contribution if more than minimum contribution', () => {
+      /**
+       * Scenario:
+       * 1. Change user contribution limit equal to the crowdsale cap.
+       * 2. User tries to contribuite more than minimum amount
+       * 3. User should be able to contribute.
+       */
+      return getContracts().then(({ meshCrowdsale, meshToken }) => {
+        return meshCrowdsale.setWhitelistingAgent(addr1, true).then(() => {
+          return meshCrowdsale.setLimit([addr1], crowdsaleCap, { from: addr1 }).then(() => {
+            return meshCrowdsale.sendTransaction({ value: minimumContribution + 1, from: addr1}).then(() => {
+              return meshToken.balanceOf(addr1).then(balance => {
+                assert.equal(rate * (minimumContribution + 1), balance, "Token balance should be positive now");
+              });
+            });
+          });
+        });
+      });
+    });
+
+    it('SUCCESS: should allow subsequent contributions with no minimum', () => {
+      /**
+       * Scenario:
+       * 1. Change user contribution limit equal to the crowdsale cap.
+       * 2. User tries to contribuite more than minimum amount
+       * 3. User tries to contribute again but with less amount this time
+       * 4. User should be able to contribute.
+       */
+      return getContracts().then(({ meshCrowdsale, meshToken }) => {
+        return meshCrowdsale.setWhitelistingAgent(addr1, true).then(() => {
+          return meshCrowdsale.setLimit([addr1], crowdsaleCap, { from: addr1 }).then(() => {
+            return meshCrowdsale.sendTransaction({ value: minimumContribution + 1, from: addr1}).then(() => {
+              return meshCrowdsale.sendTransaction({ value: minimumContribution - 1, from: addr1}).then(() => {
+                return meshToken.balanceOf(addr1).then(balance => {
+                  assert.equal(rate * minimumContribution * 2, balance, "Token balance should be positive now");
+                });
+              });
+            });
+          });
+        });
+      });
+    });
+  });
+
+  describe('mintPredefinedTokens', () => {
+    const beneficiaries = [accounts[2], accounts[3]];
+    const beneficiaryAmounts = [ 100, 200 ];
+
+    /**
+     * Scenario:
+     * 1. Crowdsale contract is deployed
+     * 2. Anyone trying to called mintPredefinedTokens method without any wei being raised.
+     * 3. The function should do nothing in that case.
+     */
+    it('should do nothing when no contribution has been made to crowdsale', () => {
+      return getContracts().then(({ meshCrowdsale, meshToken }) => {
+        return meshCrowdsale.mintPredefinedTokens().then(() => {
+          return Promise.all([
+            meshToken.balanceOf(beneficiaries[0]),
+            meshToken.balanceOf(beneficiaries[1]),
+            meshToken.totalSupply(),
+          ]).then(results => {
+            assert.equal(results[0], 0, "beneficiary 0 should not have any tokens");
+            assert.equal(results[1], 0, "beneficiary 1 should not have any tokens");
+            assert.equal(results[2], 0, "totalSupply should be 0");
+          });
+        });
+      });
+    });
+
+    /**
+     * Scenario:
+     * 1. Crowdsale contract is deployed
+     * 2. Wait for the crowdsale to start and 1st contribution to show up
+     * 3. Owner calling mintPredefinedTokens after 1st contribution
+     * 4. Tokens should be minted to the beneficiary addresses now.
+     */
+    it('should mint tokens when called by owner and contribution has been made', () => {
+      return getContracts().then(({ meshCrowdsale, meshToken }) => {
+        return meshCrowdsale.setWhitelistingAgent(addr1, true).then(() => {
+          return meshCrowdsale.setLimit([addr1], crowdsaleCap, { from: addr1 }).then(() => {
+            return meshCrowdsale.sendTransaction({ value: minimumContribution, from: addr1}).then(() => {
+              return meshCrowdsale.mintPredefinedTokens().then(() => {
+                return Promise.all([
+                  meshToken.balanceOf(beneficiaries[0]),
+                  meshToken.balanceOf(beneficiaries[1]),
+                  meshToken.totalSupply(),
+                ]).then(results => {
+                  assert.equal(results[0], beneficiaryAmounts[0], "beneficiary 0 should have tokens now");
+                  assert.equal(results[1], beneficiaryAmounts[1], "beneficiary 1 should have tokens now");
+                });
+              });
+            });
+          });
+        });
+      });
+    });
+
+    /**
+     * Scenario:
+     * 1. Crowdsale contract is deployed
+     * 2. Wait for the crowdsale to start and 1st contribution to show up
+     * 3. Non-owner calling mintPredefinedTokens after 1st contribution
+     * 4. It should do nothing.
+     */
+    it('should do nothing when called by non-owner', () => {
+      return getContracts().then(({ meshCrowdsale, meshToken }) => {
+        return meshCrowdsale.setWhitelistingAgent(addr1, true).then(() => {
+          return meshCrowdsale.setLimit([addr1], crowdsaleCap, { from: addr1 }).then(() => {
+            return meshCrowdsale.sendTransaction({ value: minimumContribution, from: addr1}).then(() => {
+              return meshCrowdsale.mintPredefinedTokens({ from: addr1 }).then(() => {
+                return Promise.all([
+                  meshToken.balanceOf(beneficiaries[0]),
+                  meshToken.balanceOf(beneficiaries[1]),
+                ]).then(results => {
+                  assert.equal(results[0], 0, "beneficiary 0 should not have any tokens");
+                  assert.equal(results[1], 0, "beneficiary 1 should not have any tokens");
+                });
+              });
+            });
+          });
+        });
+      });
+    });
+
+    /**
+     * Scenario:
+     * 1. Crowdsale contract is deployed
+     * 2. Wait for the crowdsale to start and 1st contribution to show up
+     * 3. mintPredefinedTokens called multiple times on the crowdsale
+     * 4. Tokens should be minted only once.
+     */
+    it('should only mint tokens once when contribution has been made even if called multiple times', () => {
+      return getContracts().then(({ meshCrowdsale, meshToken }) => {
+        return meshCrowdsale.setWhitelistingAgent(addr1, true).then(() => {
+          return meshCrowdsale.setLimit([addr1], crowdsaleCap, { from: addr1 }).then(() => {
+            return meshCrowdsale.sendTransaction({ value: minimumContribution, from: addr1}).then(() => {
+              return Promise.all([
+                meshCrowdsale.mintPredefinedTokens(),
+                meshCrowdsale.mintPredefinedTokens(),
+                meshCrowdsale.mintPredefinedTokens(),
+                meshCrowdsale.mintPredefinedTokens(),
+                meshCrowdsale.mintPredefinedTokens(),
+                meshCrowdsale.mintPredefinedTokens(),
+                meshCrowdsale.mintPredefinedTokens(),
+                meshCrowdsale.mintPredefinedTokens(),
+              ]).then(() => {
+                return Promise.all([
+                  meshToken.balanceOf(beneficiaries[0]),
+                  meshToken.balanceOf(beneficiaries[1]),
+                  meshToken.totalSupply(),
+                ]).then(results => {
+                  assert.equal(results[0], beneficiaryAmounts[0], "beneficiary 0 should have tokens now");
+                  assert.equal(results[1], beneficiaryAmounts[1], "beneficiary 1 should have tokens now");
+                });
+              });
+            });
+          });
+        });
+      });
+    });
+
+    /**
+     * Scenario:
+     * 1. Crowdsale contract is deployed
+     * 2. Wait for the crowdsale to start and 1st contribution to show up
+     * 3. mintPredefinedTokens called on the crowdsale
+     * 4. Tokens should only be minted for beneficiaries that have no tokens assigned to them by now
+     */
+    it('should only mint for addresses with 0 tokens', () => {
+      return getContracts().then(({ meshCrowdsale, meshToken }) => {
+        return meshCrowdsale.setWhitelistingAgent(addr1, true).then(() => {
+          return meshCrowdsale.setLimit([beneficiaries[0]], crowdsaleCap, { from: addr1 }).then(() => {
+            return meshCrowdsale.sendTransaction({ value: minimumContribution, from: beneficiaries[0]}).then(() => {
+              return Promise.all([
+                meshToken.balanceOf(beneficiaries[0]),
+                meshToken.balanceOf(beneficiaries[1]),
+              ]).then(balances => {
+                assert.equal(balances[0], rate * minimumContribution, "beneficiary 0 should have tokens now");
+                assert.equal(balances[1], 0, "beneficiary 1 should not have any tokens yet");
+                return meshCrowdsale.mintPredefinedTokens().then(() => {
+                  return Promise.all([
+                    meshToken.balanceOf(beneficiaries[0]),
+                    meshToken.balanceOf(beneficiaries[1]),
+                    meshToken.totalSupply(),
+                  ]).then(results => {
+                    assert.equal(results[0], rate * minimumContribution, "beneficiary 0 should still have same amount of tokens");
+                    assert.equal(results[1], beneficiaryAmounts[1], "beneficiary 1 should have tokens now");
+                  });
+                });
               });
             });
           });

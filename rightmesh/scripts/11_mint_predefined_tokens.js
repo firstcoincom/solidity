@@ -11,10 +11,10 @@ var CrowdsaleInstance = utils.getCrowdsaleContract(
   addressConfig.crowdsaleAddress
 );
 
-// transfer token contract ownership back to owner
-CrowdsaleInstance.transferTokenOwnership(
+// mintPredefinedTokens before crowdsale ends
+CrowdsaleInstance.mintPredefinedTokens(
   {
     gas: gasConfig.methodGas,
-    from: addressConfig.ownerAddress
+    from: addressConfig.ownerAddress,
   }
 );
