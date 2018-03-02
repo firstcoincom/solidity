@@ -12,10 +12,12 @@ var TokenInstance = utils.getTokenContract(
 );
 
 // Transfer token contract ownership to crowdsale contract
-TokenInstance.transferOwnership(
+const txHash = TokenInstance.transferOwnership(
   addressConfig.crowdsaleAddress,
   {
     gas: gasConfig.methodGas,
     from: addressConfig.ownerAddress,
   }
 );
+
+console.log("txHash: " + txHash);

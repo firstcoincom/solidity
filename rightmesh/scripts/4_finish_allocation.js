@@ -12,9 +12,11 @@ var TimelockInstance = utils.getTimelockContract(
 );
 
 // finish token allocation in timelock contract
-TimelockInstance.finishAllocation(
+const txHash = TimelockInstance.finishAllocation(
   {
     gas: gasConfig.methodGas,
     from: addressConfig.ownerAddress,
   }
 );
+
+console.log("txHash: " + txHash);

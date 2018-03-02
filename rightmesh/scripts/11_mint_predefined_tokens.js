@@ -12,9 +12,11 @@ var CrowdsaleInstance = utils.getCrowdsaleContract(
 );
 
 // mintPredefinedTokens before crowdsale ends
-CrowdsaleInstance.mintPredefinedTokens(
+const txHash = CrowdsaleInstance.mintPredefinedTokens(
   {
     gas: gasConfig.methodGas,
     from: addressConfig.ownerAddress,
   }
 );
+
+console.log("txHash: " + txHash);

@@ -11,7 +11,7 @@ var CrowdsaleInstance = utils.getCrowdsaleContract(
   addressConfig.crowdsaleAddress
 );
 
-CrowdsaleInstance.setWhitelistingAgent(
+const txHash = CrowdsaleInstance.setWhitelistingAgent(
   addressConfig.whitelistAgentAddress,
   true,
   {
@@ -19,3 +19,5 @@ CrowdsaleInstance.setWhitelistingAgent(
     gas: gasConfig.methodGas,
   }
 )
+
+console.log("txHash: " + txHash);

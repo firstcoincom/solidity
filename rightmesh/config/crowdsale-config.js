@@ -5,8 +5,8 @@ const startTime = utils.latestTime() + utils.duration.minutes(5);
 
 module.exports = {
   // crowdsale constructor variables
-  crowdsaleCap: 10, // the cap of ether for the crowdsale
-  rate: 100, // how many token will be minted for 1 eth during crowdsale
+  crowdsaleCap: 3750, // the cap of ether for the crowdsale
+  rate: 1200, // how many token will be minted for 1 eth during crowdsale
   minimumContribution: 1, // amount of minimum contribution in ether
 
   startTime: startTime,
