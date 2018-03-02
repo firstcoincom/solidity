@@ -12,10 +12,12 @@ var CrowdsaleInstance = utils.getCrowdsaleContract(
   addressConfig.crowdsaleAddress
 );
 
-CrowdsaleInstance.setCap(
+const txHash = CrowdsaleInstance.setCap(
   utils.convertEthToWei(crowdsaleConfig.crowdsaleCap),
   {
     from: addressConfig.ownerAddress,
     gas: gasConfig.methodGas,
   }
 )
+
+console.log("txHash: " + txHash);

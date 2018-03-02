@@ -1,22 +1,6 @@
 module.exports = [
   {
-    address: '0x5D51E3558757Bfdfc527867d046260fD5137Fc0F',
-    tokenAmountETH: 100,
-  },
-  {
-    address: '0x5D51E3558757Bfdfc527867d046260fD5137Fc0F',
-    tokenAmountETH: 100,
-  },
-  {
-    address: '0x5D51E3558757Bfdfc527867d046260fD5137Fc0F',
-    tokenAmountETH: 100,
-  },
-  {
-    address: '0x5D51E3558757Bfdfc527867d046260fD5137Fc0F',
-    tokenAmountETH: 100,
-  },
-  {
-    address: '0x5D51E3558757Bfdfc527867d046260fD5137Fc0F',
+    address: '0x03Cbb007066F4985cA9d7D5d7F2C42052d18503F',
     tokenAmountETH: 100,
   },
 ]

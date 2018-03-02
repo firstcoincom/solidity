@@ -13,12 +13,45 @@ var crowdsaleInstance = utils.getCrowdsaleContract(
   addressConfig.crowdsaleAddress
 );
 
-// white list a given accounts
-crowdsaleInstance.setLimit(
-  whitelistConfig.accountsToWhitelist,
-  web3.toWei( whitelistConfig.limitByEth, 'ether'),
-  {
-    gas: gasConfig.methodGas,
-    from: addressConfig.whitelistAgentAddress,
+const limit = web3.toWei( whitelistConfig.limitByEth, 'ether');
+
+const count = Math.floor(whitelistConfig.accountsToWhitelist.length / whitelistConfig.batchSize);
+
+for(var i = 0; i < count; i++) {
+  var accounts = whitelistConfig.accountsToWhitelist.slice(
+  					i * whitelistConfig.batchSize, 
+					i * whitelistConfig.batchSize + whitelistConfig.batchSize);
+
+  submitSetLimitTrans(accounts, limit);
+}
+
+var accounts = whitelistConfig.accountsToWhitelist.slice(
+				count * whitelistConfig.batchSize, 
+				whitelistConfig.accountsToWhitelist.length);
+
+submitSetLimitTrans(accounts, limit);
+
+function submitSetLimitTrans(accounts, limit) {
+
+  for (var i = 0, len =accounts.length; i < len; i++) {
+    console.log(accounts[i]);
   }
-);
+
+  console.log("limit: " + limit);
+
+  // white list a given accounts
+  const txHash = crowdsaleInstance.setLimit(
+    accounts,
+    limit,
+    {
+      gas: gasConfig.methodGas,
+      from: addressConfig.whitelistAgentAddress,
+    }
+  );
+  
+  console.log("txHash: " + txHash);
+}
+
+
+
+

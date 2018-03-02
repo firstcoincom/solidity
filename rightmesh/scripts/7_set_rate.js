@@ -12,10 +12,12 @@ var CrowdsaleInstance = utils.getCrowdsaleContract(
   addressConfig.crowdsaleAddress
 );
 
-CrowdsaleInstance.setRate(
+const txHash = CrowdsaleInstance.setRate(
   crowdsaleConfig.rate,
   {
     from: addressConfig.ownerAddress,
     gas: gasConfig.methodGas,
   }
 )
+
+console.log("txHash: " + txHash);

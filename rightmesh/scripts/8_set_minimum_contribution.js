@@ -12,10 +12,12 @@ var CrowdsaleInstance = utils.getCrowdsaleContract(
   addressConfig.crowdsaleAddress
 );
 
-CrowdsaleInstance.setMinimumContribution(
+const txHash = CrowdsaleInstance.setMinimumContribution(
   utils.convertEthToWei(crowdsaleConfig.minimumContribution),
   {
     from: addressConfig.ownerAddress,
     gas: gasConfig.methodGas,
   }
 )
+
+console.log("txHash: " + txHash);

@@ -12,9 +12,11 @@ var TokenInstance = utils.getTokenContract(
 );
 
 // Call unpause on the token contract
-TokenInstance.unpause(
+const txHash = TokenInstance.unpause(
   {
     gas: gasConfig.methodGas,
     from: addressConfig.ownerAddress,
   }
 );
+
+console.log("txHash: " + txHash);

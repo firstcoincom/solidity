@@ -12,7 +12,7 @@ var TokenInstance = utils.getTokenContract(
 );
 
 // Call updateAllowedTransfers on the token contract
-TokenInstance.updateAllowedTransfers(
+const txHash = TokenInstance.updateAllowedTransfers(
   addressConfig.transferExceptionAddress,
   true,
   {
@@ -20,3 +20,5 @@ TokenInstance.updateAllowedTransfers(
     from: addressConfig.ownerAddress,
   }
 );
+
+console.log("txHash: " + txHash);
