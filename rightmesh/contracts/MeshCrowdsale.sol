@@ -123,7 +123,7 @@ contract MeshCrowdsale is CappedCrowdsale, Ownable {
    */
   function setRate(uint256 _rate) external onlyOwner {
     // make sure the crowdsale has not started
-    require(weiRaised == 0);
+    require(weiRaised == 0 && now <= startTime);
 
     // make sure new rate is greater than 0
     require(_rate > 0);
@@ -138,7 +138,7 @@ contract MeshCrowdsale is CappedCrowdsale, Ownable {
    */
   function setCap(uint256 _cap) external onlyOwner {
     // make sure the crowdsale has not started
-    require(weiRaised == 0);
+    require(weiRaised == 0 && now <= startTime);
 
     // make sure new cap is greater than 0
     require(_cap > 0);
