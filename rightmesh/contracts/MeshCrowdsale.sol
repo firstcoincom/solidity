@@ -39,7 +39,7 @@ contract MeshCrowdsale is CappedCrowdsale, Ownable {
   address[] public beneficiaries;
 
   /**
-   * @dev variable to keep track of amount og tokens to mint for beneficiaries
+   * @dev variable to keep track of amount of tokens to mint for beneficiaries
    */
   uint256[] public beneficiaryAmounts;
 
@@ -89,20 +89,17 @@ contract MeshCrowdsale is CappedCrowdsale, Ownable {
    * @dev Allows owner to add / remove whitelistingAgents
    * @param _address that is being allowed or removed from whitelisting addresses
    * @param _value boolean indicating if address is whitelisting agent or not
-   * @return boolean indicating function success.
    */
-  function setWhitelistingAgent(address _address, bool _value) external onlyOwner returns (bool) {
+  function setWhitelistingAgent(address _address, bool _value) external onlyOwner {
     whitelistingAgents[_address] = _value;
-    return true;
   }
 
   /**
    * @dev Allows the current owner to update contribution limits
    * @param _addresses whose contribution limits should be changed
    * @param _weiLimit new contribution limit
-   * @return boolean indicating function success.
    */
-  function setLimit(address[] _addresses, uint256 _weiLimit) external returns (bool) {
+  function setLimit(address[] _addresses, uint256 _weiLimit) external {
     require(whitelistingAgents[msg.sender] == true);
 
     for (uint i = 0; i < _addresses.length; i++) {
@@ -113,15 +110,13 @@ contract MeshCrowdsale is CappedCrowdsale, Ownable {
         weiLimits[_address] = _weiLimit;
       }
     }
-    return true;
   }
 
   /**
    * @dev Allows the current owner to change the ETH to token generation rate.
    * @param _rate indicating the new token generation rate.
-   * @return boolean indicating function success.
    */
-  function setRate(uint256 _rate) external onlyOwner returns (bool) {
+  function setRate(uint256 _rate) external onlyOwner {
     // make sure the crowdsale has not started
     require(weiRaised == 0);
 
@@ -129,16 +124,14 @@ contract MeshCrowdsale is CappedCrowdsale, Ownable {
     require(_rate > 0);
 
     rate = _rate;
-    return true;
   }
 
 
   /**
    * @dev Allows the current owner to change the crowdsale cap.
    * @param _cap indicating the new crowdsale cap.
-   * @return boolean indicating function success.
    */
-  function setCap(uint256 _cap) external onlyOwner returns (bool) {
+  function setCap(uint256 _cap) external onlyOwner {
     // make sure the crowdsale has not started
     require(weiRaised == 0);
 
@@ -146,17 +139,14 @@ contract MeshCrowdsale is CappedCrowdsale, Ownable {
     require(_cap > 0);
 
     cap = _cap;
-    return true;
   }
 
   /**
    * @dev Allows the current owner to change the required minimum contribution.
    * @param _minimumContribution indicating the minimum required contribution.
-   * @return boolean indicating function success.
    */
-  function setMinimumContribution(uint256 _minimumContribution) external onlyOwner returns (bool) {
+  function setMinimumContribution(uint256 _minimumContribution) external onlyOwner {
     minimumContribution = _minimumContribution;
-    return true;
   }
 
   /*
@@ -164,7 +154,7 @@ contract MeshCrowdsale is CappedCrowdsale, Ownable {
    * can be called by anyone as the outcome is fixed and does not depend on who is calling the method
    * can be called multiple times but will only do the minting once per address
    */
-  function mintPredefinedTokens() external onlyOwner returns (bool) {
+  function mintPredefinedTokens() external onlyOwner {
     // make sure the crowdsale has started
     require(weiRaised > 0);
 
