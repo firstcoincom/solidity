@@ -49,7 +49,8 @@ contract('MeshCrowdsale', (accounts) => {
           meshCrowdsale.rate(),
           meshCrowdsale.wallet(),
           meshCrowdsale.cap(),
-          meshCrowdsale.token()
+          meshCrowdsale.token(),
+          meshCrowdsale.mintingFinished(),
         ]).then(results => {
           assert.equal(results[0], startTime, "Start time should match the passed params");
           assert.equal(results[1], endTime, "End time should match the passed params");
@@ -57,6 +58,7 @@ contract('MeshCrowdsale', (accounts) => {
           assert.equal(results[3], wallet, "Destination wallet should match the passed params");
           assert.equal(results[4], crowdsaleCap, "Cap should match the passed params");
           assert.equal(results[5], meshToken.address, "Token should match the passed params");
+          assert.equal(results[6], false, "By default minting should not be finished");
         });
       });
     });
@@ -852,10 +854,11 @@ contract('MeshCrowdsale', (accounts) => {
                 return Promise.all([
                   meshToken.balanceOf(beneficiaries[0]),
                   meshToken.balanceOf(beneficiaries[1]),
-                  meshToken.totalSupply(),
+                  meshCrowdsale.mintingFinished(),
                 ]).then(results => {
                   assert.equal(results[0], beneficiaryAmounts[0], "beneficiary 0 should have tokens now");
                   assert.equal(results[1], beneficiaryAmounts[1], "beneficiary 1 should have tokens now");
+                  assert.equal(results[2], true, "mintingFinished should be set to true now");
                 });
               });
             });
@@ -880,9 +883,11 @@ contract('MeshCrowdsale', (accounts) => {
                 return Promise.all([
                   meshToken.balanceOf(beneficiaries[0]),
                   meshToken.balanceOf(beneficiaries[1]),
+                  meshCrowdsale.mintingFinished(),
                 ]).then(results => {
                   assert.equal(results[0], 0, "beneficiary 0 should not have any tokens");
                   assert.equal(results[1], 0, "beneficiary 1 should not have any tokens");
+                  assert.equal(results[2], false, "mintingFinished should still be set to false");
                 });
               });
             });
@@ -916,10 +921,11 @@ contract('MeshCrowdsale', (accounts) => {
                 return Promise.all([
                   meshToken.balanceOf(beneficiaries[0]),
                   meshToken.balanceOf(beneficiaries[1]),
-                  meshToken.totalSupply(),
+                  meshCrowdsale.mintingFinished(),
                 ]).then(results => {
                   assert.equal(results[0], beneficiaryAmounts[0], "beneficiary 0 should have tokens now");
                   assert.equal(results[1], beneficiaryAmounts[1], "beneficiary 1 should have tokens now");
+                  assert.equal(results[2], true, "mintingFinished should be set to true by now");
                 });
               });
             });
