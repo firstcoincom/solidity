@@ -177,10 +177,9 @@ contract Timelock is Ownable {
     require(!withdrawalPaused[msg.sender]);
 
     uint256 availableTokens = availableForWithdrawal(msg.sender);
-    if (availableTokens > 0) {
-      withdrawnTokens[msg.sender] = withdrawnTokens[msg.sender].add(availableTokens);
-      token.safeTransfer(msg.sender, availableTokens);
-    }
+    require (availableTokens > 0);
+    withdrawnTokens[msg.sender] = withdrawnTokens[msg.sender].add(availableTokens);
+    token.safeTransfer(msg.sender, availableTokens);
     return true;
   }
 
