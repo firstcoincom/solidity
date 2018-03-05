@@ -114,7 +114,7 @@ contract Timelock is Ownable {
    * @param _amount number of tokens being received by beneficiary.
    * @return boolean indicating function success.
    */
-  function allocateTokens(address _address, uint256 _amount) onlyOwner public returns (bool) {
+  function allocateTokens(address _address, uint256 _amount) onlyOwner external returns (bool) {
     require(!allocationFinished);
 
     allocatedTokens[_address] = _amount;
@@ -125,7 +125,7 @@ contract Timelock is Ownable {
    * @dev helper method that allows owner to mark allocation as done.
    * @return boolean indicating function success.
    */
-  function finishAllocation() onlyOwner public returns (bool) {
+  function finishAllocation() onlyOwner external returns (bool) {
     allocationFinished = true;
 
     return true;
@@ -135,7 +135,7 @@ contract Timelock is Ownable {
    * @dev helper method that allows owner to pause withdrawls for any address.
    * @return boolean indicating function success.
    */
-  function pauseWithdrawal(address _address) onlyOwner public returns (bool) {
+  function pauseWithdrawal(address _address) onlyOwner external returns (bool) {
     withdrawalPaused[_address] = true;
     return true;
   }
@@ -144,7 +144,7 @@ contract Timelock is Ownable {
    * @dev helper method that allows owner to unpause withdrawls for any address.
    * @return boolean indicating function success.
    */
-  function unpauseWithdrawal(address _address) onlyOwner public returns (bool) {
+  function unpauseWithdrawal(address _address) onlyOwner external returns (bool) {
     withdrawalPaused[_address] = false;
     return true;
   }
@@ -173,7 +173,7 @@ contract Timelock is Ownable {
    * @dev helper method that allows a beneficiary to withdraw tokens that have vested for their address.
    * @return boolean indicating function success.
    */
-  function withdraw() public returns (bool) {
+  function withdraw() external returns (bool) {
     require(!withdrawalPaused[msg.sender]);
 
     uint256 availableTokens = availableForWithdrawal(msg.sender);
