@@ -43,6 +43,10 @@ contract MeshCrowdsale is CappedCrowdsale, Ownable {
    */
   uint256[] public beneficiaryAmounts;
 
+  /**
+   * @dev variable to keep track of if predefined tokens have been minted
+   */
+  bool public mintingFinished;
   /*---------------------------------constructor---------------------------------*/
 
   /**
@@ -56,6 +60,7 @@ contract MeshCrowdsale is CappedCrowdsale, Ownable {
     require(_beneficiaries.length == _beneficiaryAmounts.length);
     beneficiaries = _beneficiaries;
     beneficiaryAmounts = _beneficiaryAmounts;
+    mintingFinished = false;
 
     minimumContribution = _minimumContribution;
   }
@@ -151,10 +156,12 @@ contract MeshCrowdsale is CappedCrowdsale, Ownable {
 
   /*
    * @dev Function to perform minting to predefined beneficiaries once crowdsale has started
-   * can be called by anyone as the outcome is fixed and does not depend on who is calling the method
-   * can be called multiple times but will only do the minting once per address
+   * can be called by only once and by owner only
    */
   function mintPredefinedTokens() external onlyOwner {
+    // prevent owner from minting twice
+    require(!mintingFinished);
+
     // make sure the crowdsale has started
     require(weiRaised > 0);
 
@@ -165,6 +172,8 @@ contract MeshCrowdsale is CappedCrowdsale, Ownable {
         token.mint(beneficiaries[i], beneficiaryAmounts[i]);
       }
     }
+    // set it at the end, making sure all transactions have been completed with the gas
+    mintingFinished = true;
   }
 
   /*---------------------------------proxy methods for token when owned by contract---------------------------------*/
