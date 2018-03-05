@@ -100,7 +100,7 @@ contract('MeshCrowdsale', (accounts) => {
      */
     it('should change the rate when called', () => {
       const newRate = 100000;
-      return getContracts().then(({ meshCrowdsale, meshToken }) => {
+      return getContracts(getCurrentTime()+2).then(({ meshCrowdsale, meshToken }) => {
         return meshCrowdsale.setRate(newRate).then(() => {
           return meshCrowdsale.rate().then(_rate => {
             assert.equal(_rate, newRate, 'Rate should be equal to new rate now');
@@ -116,7 +116,7 @@ contract('MeshCrowdsale', (accounts) => {
      */
     it('should not allow owner to set rate to 0', () => {
       const newRate = 0;
-      return getContracts().then(({ meshCrowdsale, meshToken }) => {
+      return getContracts(getCurrentTime() + 2).then(({ meshCrowdsale, meshToken }) => {
         return meshCrowdsale.setRate(newRate).then(() => {
           return meshCrowdsale.rate().then(_rate => {
             assert.equal(_rate, rate, 'Rate should still be as original defined in the constructor');
@@ -132,7 +132,7 @@ contract('MeshCrowdsale', (accounts) => {
      */
     it('should not allow non owner to change the rate', () => {
       const newRate = 100000;
-      return getContracts().then(({ meshCrowdsale, meshToken }) => {
+      return getContracts(getCurrentTime() + 2).then(({ meshCrowdsale, meshToken }) => {
         return meshCrowdsale.setRate(newRate, { from: addr1 }).then(() => {
           return meshCrowdsale.rate().then(_rate => {
             assert.equal(_rate, rate, 'Rate should still be as original defined in the constructor');
