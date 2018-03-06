@@ -45,6 +45,22 @@ contract MeshToken is CappedToken, PausableToken {
    */
   function pause() onlyOwner whenNotPaused public {}
 
+  /**
+   * @dev modifier created to prevent short address attack problems.
+   * solution based on this blog post https://blog.coinfabrik.com/smart-contract-short-address-attack-mitigation-failure
+   */
+  modifier onlyPayloadSize(uint size) {
+    assert(msg.data.length >= size + 4);
+    _;
+  }
+
+  /**
+   * @dev overriding transfer method to include the onlyPayloadSize check modifier
+   */
+  function transfer(address _to, uint256 _value) onlyPayloadSize(2 * 32) returns (bool) {
+    return super.transfer(_to, _value);
+  }
+
   /*------------------------------------new methods------------------------------------*/
 
   /**
