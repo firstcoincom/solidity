@@ -57,7 +57,7 @@ contract MeshToken is CappedToken, PausableToken {
   /**
    * @dev overriding transfer method to include the onlyPayloadSize check modifier
    */
-  function transfer(address _to, uint256 _value) onlyPayloadSize(2 * 32) returns (bool) {
+  function transfer(address _to, uint256 _value) onlyPayloadSize(2 * 32) public returns (bool) {
     return super.transfer(_to, _value);
   }
 
