@@ -61,6 +61,41 @@ contract MeshToken is CappedToken, PausableToken {
     return super.transfer(_to, _value);
   }
 
+  /**
+   * @dev overriding transferFrom method to include the onlyPayloadSize check modifier
+   */
+  function transferFrom(address _from, address _to, uint256 _value) onlyPayloadSize(3 * 32) public returns (bool) {
+    return super.transferFrom(_from, _to, _value);
+  }
+
+  /**
+   * @dev overriding approve method to include the onlyPayloadSize check modifier
+   */
+  function approve(address _spender, uint256 _value) onlyPayloadSize(2 * 32) public returns (bool) {
+    return super.approve(_spender, _value);
+  }
+
+  /**
+   * @dev overriding increaseApproval method to include the onlyPayloadSize check modifier
+   */
+  function increaseApproval(address _spender, uint _addedValue) onlyPayloadSize(2 * 32) public returns (bool) {
+    return super.increaseApproval(_spender, _addedValue);
+  }
+
+  /**
+   * @dev overriding decreaseApproval method to include the onlyPayloadSize check modifier
+   */
+  function decreaseApproval(address _spender, uint _subtractedValue) onlyPayloadSize(2 * 32) public returns (bool) {
+    return super.decreaseApproval(_spender, _subtractedValue);
+  }
+
+  /**
+   * @dev overriding mint method to include the onlyPayloadSize check modifier
+   */
+  function mint(address _to, uint256 _amount) onlyOwner canMint onlyPayloadSize(2 * 32) public returns (bool) {
+    return super.mint(_to, _amount);
+  }
+
   /*------------------------------------new methods------------------------------------*/
 
   /**

@@ -337,4 +337,105 @@ contract('MeshToken', (accounts) => {
     });
 
   });
+
+  describe('approve', () => {
+    /**
+     * Scenario:
+     * 1. Token contract is deployed successfully.
+     * 2. Owner unpaused the tokens.
+     * 3. One account trying to approve spending amount for another.
+     * 4. Transaction is successful.
+     */
+    it('should allow anyone to approve an amount correctly', () => {
+      const allowance = 1000;
+      return MeshToken.new().then(meshToken => {
+        return meshToken.unpause().then(() => {
+          return meshToken.approve(accounts[1], allowance,  { from: accounts[0] }).then(() => {
+            return meshToken.allowance(accounts[0], accounts[1]).then(_allowance => {
+              assert.equal(allowance, _allowance, 'allowance should be set correctly');
+            });
+          });
+        });
+      });
+    });
+  });
+
+  describe('increaseApproval', () => {
+    /**
+     * Scenario:
+     * 1. Token contract is deployed successfully.
+     * 2. Owner unpaused the tokens.
+     * 3. One account trying to approve spending amount for another.
+     * 4. Same account trying to increase the approved amount.
+     * 5. Transaction is successful.
+     */
+    it('should allow anyone to increase the approved amount correctly', () => {
+      const allowance = 1000;
+      const increasedAmount = 100;
+      return MeshToken.new().then(meshToken => {
+        return meshToken.unpause().then(() => {
+          return meshToken.approve(accounts[1], allowance,  { from: accounts[0] }).then(() => {
+            return meshToken.increaseApproval(accounts[1], increasedAmount,  { from: accounts[0] }).then(() => {
+              return meshToken.allowance(accounts[0], accounts[1]).then(_allowance => {
+                assert.equal(allowance + increasedAmount, _allowance, 'allowance should be set correctly');
+              });
+            });
+          });
+        });
+      });
+    });
+  });
+
+  describe('decreaseApproval', () => {
+    /**
+     * Scenario:
+     * 1. Token contract is deployed successfully.
+     * 2. Owner unpaused the tokens.
+     * 3. One account trying to approve spending amount for another.
+     * 4. Same account trying to decrease the approved amount.
+     * 5. Transaction is successful.
+     */
+    it('should allow anyone to decrease the approved amount correctly', () => {
+      const allowance = 1000;
+      const decreasedAmount = 100;
+      return MeshToken.new().then(meshToken => {
+        return meshToken.unpause().then(() => {
+          return meshToken.approve(accounts[1], allowance,  { from: accounts[0] }).then(() => {
+            return meshToken.decreaseApproval(accounts[1], decreasedAmount,  { from: accounts[0] }).then(() => {
+              return meshToken.allowance(accounts[0], accounts[1]).then(_allowance => {
+                assert.equal(allowance - decreasedAmount, _allowance, 'allowance should be set correctly');
+              });
+            });
+          });
+        });
+      });
+    });
+  });
+
+  describe('transferFrom', () => {
+    /**
+     * Scenario:
+     * 1. Token contract is deployed successfully.
+     * 2. Owner unpaused the tokens.
+     * 3. One account trying to approve spending amount for another.
+     * 4. Spending account trying to withdraw the approved tokens.
+     * 5. Transaction is successful.
+     */
+    it('should allow anyone call transferFrom correctly', () => {
+      const allowance = 1000;
+      return MeshToken.new().then(meshToken => {
+        return meshToken.unpause().then(() => {
+          return meshToken.mint(accounts[1], allowance).then(() => {
+            return meshToken.approve(accounts[1], allowance,  { from: accounts[0] }).then(() => {
+              return meshToken.transferFrom(accounts[0], accounts[1], allowance, { from: accounts[1] }).then(() => {
+                return meshToken.balanceOf(accounts[1]).then(_balance => {
+                  return assert.equal(allowance, _balance, 'the account should have received the tokens by now');
+                });
+              });
+            });
+          });
+        });
+      });
+    });
+  });
 });

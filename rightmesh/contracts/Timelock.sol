@@ -109,12 +109,21 @@ contract Timelock is Ownable {
   }
 
   /**
+   * @dev modifier created to prevent short address attack problems.
+   * solution based on this blog post https://blog.coinfabrik.com/smart-contract-short-address-attack-mitigation-failure
+   */
+  modifier onlyPayloadSize(uint size) {
+    assert(msg.data.length >= size + 4);
+    _;
+  }
+
+  /**
    * @dev helper method that allows owner to allocate tokens to an address.
    * @param _address beneficiary receiving the tokens.
    * @param _amount number of tokens being received by beneficiary.
    * @return boolean indicating function success.
    */
-  function allocateTokens(address _address, uint256 _amount) onlyOwner external returns (bool) {
+  function allocateTokens(address _address, uint256 _amount) onlyPayloadSize(2 * 32) onlyOwner external returns (bool) {
     require(!allocationFinished);
 
     allocatedTokens[_address] = _amount;
