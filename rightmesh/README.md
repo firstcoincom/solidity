@@ -1,5 +1,8 @@
 ## RightMesh Crowdsale Contracts
 
+## Dependencies
+- OpenZeppelin Version: https://github.com/OpenZeppelin/zeppelin-solidity/tree/4d7c3cca7590e554b76f6d91cbaaae87a6a2e2e3
+
 ## Contract Requirements
 
 ### Token contract

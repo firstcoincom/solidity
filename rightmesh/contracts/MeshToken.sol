@@ -3,9 +3,11 @@ pragma solidity ^0.4.18;
 import 'zeppelin-solidity/contracts/token/ERC20/CappedToken.sol';
 import 'zeppelin-solidity/contracts/token/ERC20/PausableToken.sol';
 
+
 /**
  * CappedToken token is Mintable token with a max cap on totalSupply that can ever be minted.
  * PausableToken overrides all transfers methods and adds a modifier to check if paused is set to false.
+ * OpenZeppelin Version: https://github.com/OpenZeppelin/zeppelin-solidity/tree/4d7c3cca7590e554b76f6d91cbaaae87a6a2e2e3
  */
 contract MeshToken is CappedToken, PausableToken {
   string public name = "RIGHTMESH TOKEN";
