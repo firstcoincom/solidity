@@ -8,6 +8,7 @@ import 'zeppelin-solidity/contracts/ownership/Ownable.sol';
 
 /**
  * CappedCrowdsale limits the total number of wei that can be collected in the sale.
+ * OpenZeppelin Version: https://github.com/OpenZeppelin/zeppelin-solidity/tree/4d7c3cca7590e554b76f6d91cbaaae87a6a2e2e3
  */
 contract MeshCrowdsale is CappedCrowdsale, Ownable {
 
@@ -69,6 +70,7 @@ contract MeshCrowdsale is CappedCrowdsale, Ownable {
 
   /**
    * overriding Crowdsale#buyTokens to keep track of wei contributed per address
+   * the version being overriden is https://github.com/OpenZeppelin/zeppelin-solidity/blob/4d7c3cca7590e554b76f6d91cbaaae87a6a2e2e3/contracts/crowdsale/Crowdsale.sol#L66
    */
   function buyTokens(address beneficiary) public payable {
     weiContributions[msg.sender] = weiContributions[msg.sender].add(msg.value);

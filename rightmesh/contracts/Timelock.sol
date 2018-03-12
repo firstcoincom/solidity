@@ -5,12 +5,14 @@ import 'zeppelin-solidity/contracts/ownership/Ownable.sol';
 import "zeppelin-solidity/contracts/token/ERC20/SafeERC20.sol";
 import "zeppelin-solidity/contracts/token/ERC20/ERC20Basic.sol";
 
+
 /**
  * @title TokenTimelock
  * @dev A token holder contract that can release its token balance gradually like a
  * typical vesting scheme with a cliff, gradual release period, and implied residue.
  *
  * Withdraws by an address can be paused by the owner.
+ * OpenZeppelin Version: https://github.com/OpenZeppelin/zeppelin-solidity/tree/4d7c3cca7590e554b76f6d91cbaaae87a6a2e2e3
  */
 contract Timelock is Ownable {
   using SafeMath for uint256;
